@@ -1,0 +1,113 @@
+# dependencies
+/node_modules
+
+# production
+/build
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# misc
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# generated files
+coverage/
+
+# cache
+.cache/
+.parcel-cache/
+
+# optional eslint cache
+.eslintcache
+
+# vite
+dist/
+
+# local history
+.history/
+
+# lock files (optional)
+# package-lock.json
+# yarn.lock
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
+### VS Code ###
+.vscode/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### Maven ###
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+### Gradle ###
+.gradle/
+build/
+
+### Logs ###
+*.log
+
+### Runtime Files ###
+*.pid
+*.seed
+*.pid.lock
+
+### OS Files ###
+.DS_Store
+Thumbs.db
+
+### Environment ###
+.env
+
+### Spring Boot ###
+application.properties
+application.yml
+application-dev.properties
+application-prod.properties
+
+### Uploaded Files ###
+uploads/
+temp/
+storage/
+
+### Generated ###
+out/
+
+### Java ###
+*.class
+
+### Lombok ###
+lombok.config
