@@ -8,9 +8,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity          // enables @PreAuthorize on controllers
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -28,45 +31,57 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors()
-                .and()
-                .csrf().disable()
-                .authorizeHttpRequests(
-                        auth -> auth
-                                .requestMatchers("/").permitAll()
-                                .requestMatchers("/api/v1/auth/login").permitAll()
-                                .requestMatchers("/api/v1/auth/refresh").permitAll()
-                                .requestMatchers("/api/v1/student-auth/login").permitAll()
-                                .requestMatchers("/api/v1/student-auth/refresh").permitAll()
-                                .requestMatchers("/api/v1/student").permitAll()
-                                .requestMatchers("/api/v1/superadmin/category").permitAll()
-                                .requestMatchers("/api/v1/superadmin/subcategory/").permitAll()
-                                .requestMatchers("/api/v1/superadmin/subcategory/**").permitAll()
-                                .requestMatchers("/api/v1/superadmin/subcategory/category/**").permitAll()
-                                .requestMatchers("/api/v1/groups/**").permitAll()
-                                .requestMatchers("/api/v1/superadmin/**").permitAll()
-                                .requestMatchers("/api/v1/subject/").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/**").permitAll()
-                                .requestMatchers(HttpMethod.DELETE, "/**").permitAll()
-                                .requestMatchers(HttpMethod.PUT, "/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/**").permitAll()
-                                .requestMatchers("/api/v1/file/getFile/{id}").permitAll()
-                                .anyRequest().authenticated()
-                )
-                .addFilterBefore(myFilter, UsernamePasswordAuthenticationFilter.class); // Add your custom filter before the default Spring Security filter
+            .cors()
+            .and()
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // ── Public: auth endpoints ─────────────────────────────
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/api/v1/student-auth/**").permitAll()
+
+                // ── Public: journal browsing ───────────────────────────
+                .requestMatchers(HttpMethod.GET, "/api/v1/journals/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/issues/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/articles/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/citations/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/metadata/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/search/**").permitAll()
+
+                // ── Public: SEO & indexing ─────────────────────────────
+                .requestMatchers("/sitemap.xml").permitAll()
+                .requestMatchers("/robots.txt").permitAll()
+                .requestMatchers("/oai-pmh/**").permitAll()
+
+                // ── Public: file downloads ─────────────────────────────
+                .requestMatchers(HttpMethod.GET, "/api/v1/files/**").permitAll()
+
+                // ── Public: swagger ────────────────────────────────────
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+
+                // ── Public: static / SPA ───────────────────────────────
+                .requestMatchers("/", "/index.html", "/static/**", "/*.ico", "/*.json").permitAll()
+                .requestMatchers(HttpMethod.GET, "/**").permitAll()
+
+                // ── Legacy permissive rules kept for backward compat ───
+                .requestMatchers(HttpMethod.DELETE, "/**").permitAll()
+                .requestMatchers(HttpMethod.PUT,    "/**").permitAll()
+                .requestMatchers(HttpMethod.POST,   "/**").permitAll()
+
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(myFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
     @Bean
     public UserDetailsService users() {
-        return username -> {
-            User user = userRepo.findByPhone(username).orElseThrow();
-            return user;
-        };
+        return username -> userRepo.findByPhone(username).orElseThrow();
     }
 
     @Bean
-    public static PasswordEncoder passwordEncoder(){
+    public static PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 

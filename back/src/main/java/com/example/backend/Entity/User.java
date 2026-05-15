@@ -23,13 +23,38 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+
     @Column(unique = true, nullable = false)
     private String phone;
+
     private String password;
+
     @Column(unique = true)
     private Integer number;
+
     private String name;
+
+    @Column(unique = true)
+    private String email;
+
+    /** Open Researcher and Contributor ID */
+    @Column(unique = true)
+    private String orcid;
+
+    private String affiliation;
+
+    private String country;
+
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
+    @Column(name = "profile_photo_url")
+    private String profilePhotoUrl;
+
+    private boolean emailVerified = false;
+
     private LocalDateTime created_at;
+
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Role> roles;
 
@@ -59,22 +84,14 @@ public class User implements UserDetails {
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
+    public boolean isAccountNonLocked() { return true; }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    public boolean isCredentialsNonExpired() { return true; }
 
     @Override
-    public boolean isEnabled() {
-        return true;
-    }
+    public boolean isEnabled() { return true; }
 }

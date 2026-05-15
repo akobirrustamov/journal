@@ -21,19 +21,10 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     @Override
     public HttpEntity<?> uploadFile(MultipartFile photo, String prefix) throws IOException {
-        UUID id = UUID.randomUUID();
-        String fileName = id + "_" + photo.getOriginalFilename();
-        String filePath = "backend/files" + prefix + "/" + fileName;
-
-        File file = new File(filePath);
-        file.getParentFile().mkdirs();
-
-        try (OutputStream outputStream = new FileOutputStream(file)) {
-            FileCopyUtils.copy(photo.getInputStream(), outputStream);
-        }
-        Attachment attachment = new Attachment(id, prefix, fileName);
+        Attachment attachment = Attachment.createAttachment(photo, prefix);
+        if (attachment == null) return ResponseEntity.badRequest().build();
         attachmentRepo.save(attachment);
-        return ResponseEntity.ok(id);
+        return ResponseEntity.ok(attachment.getId());
     }
 
 

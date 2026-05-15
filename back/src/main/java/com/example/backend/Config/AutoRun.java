@@ -22,14 +22,28 @@ public class AutoRun implements CommandLineRunner {
     public void run(String... args) throws Exception {
 
 
-        if (roleRepo.findAll().isEmpty()) {
-            saveRoles();
-        }
-
-
+        // Seed all roles (idempotent – only inserts if missing)
+        seedRoles();
 
         checkAndCreateUser("superadmin", "00000000", "SUPER ADMIN", UserRoles.ROLE_SUPERADMIN);
         checkAndCreateUser("Akobir", "Akobir", "SUPER ADMIN", UserRoles.ROLE_SUPERADMIN);
+    }
+
+    private void seedRoles() {
+        saveRoleIfMissing(1,  UserRoles.ROLE_ADMIN);
+        saveRoleIfMissing(2,  UserRoles.ROLE_USER);
+        saveRoleIfMissing(3,  UserRoles.ROLE_JOURNAL_ADMIN);
+        saveRoleIfMissing(4,  UserRoles.ROLE_EDITOR);
+        saveRoleIfMissing(5,  UserRoles.ROLE_SUPERADMIN);
+        saveRoleIfMissing(6,  UserRoles.ROLE_REVIEWER);
+        saveRoleIfMissing(7,  UserRoles.ROLE_AUTHOR);
+        saveRoleIfMissing(8,  UserRoles.ROLE_READER);
+    }
+
+    private void saveRoleIfMissing(int id, UserRoles roleEnum) {
+        if (!roleRepo.existsById(id)) {
+            roleRepo.save(new Role(id, roleEnum));
+        }
     }
 
     private void checkAndCreateUser(String phone, String password, String name, UserRoles role) {
@@ -37,24 +51,11 @@ public class AutoRun implements CommandLineRunner {
         if (userByPhone.isEmpty()) {
             User user = User.builder()
                     .phone(phone)
-                    .name(name)  // Storing the user's name
+                    .name(name)
                     .password(passwordEncoder.encode(password))
                     .roles(List.of(roleRepo.findByName(role)))
                     .build();
             userRepo.save(user);
         }
     }
-
-
-
-
-
-    private List<Role> saveRoles() {
-        return roleRepo.saveAll(List.of(
-                new Role(1, UserRoles.ROLE_ADMIN),
-                new Role(5, UserRoles.ROLE_SUPERADMIN)
-        ));
-    }
-
-
 }
