@@ -1,8 +1,8 @@
 # dependencies
-/node_modules
+/front/node_modules
 
 # production
-/build
+/front/build
 
 # logs
 npm-debug.log*
