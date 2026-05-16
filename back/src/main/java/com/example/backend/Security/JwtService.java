@@ -20,6 +20,10 @@ public class JwtService {
     public String generateJwtToken(User user) {
         UUID id = user.getId();
         Map<String, Object> claims = new HashMap<>();
+        // Add roles to token
+        claims.put("roles", user.getRoles().stream()
+                .map(role -> role.getName().name())
+                .toList());
         String jwt = Jwts.builder()
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 6000))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
@@ -33,6 +37,10 @@ public class JwtService {
     public String generateJwtRefreshToken(User user) {
         UUID id = user.getId();
         Map<String, Object> claims = new HashMap<>();
+        // Add roles to refresh token
+        claims.put("roles", user.getRoles().stream()
+                .map(role -> role.getName().name())
+                .toList());
         String jwt = Jwts.builder()
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
                 .setIssuedAt(new Date(System.currentTimeMillis()))

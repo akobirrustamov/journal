@@ -10,6 +10,7 @@ import IlmiyBolimLayout from "layouts/ilmiy-bolim";
 import IlmiyRahbarLayout from "layouts/ilmiy-rahbar";
 import IlmiyTexnikLayout from "layouts/ilmiy-rahbar";
 import BugalterLayout from "layouts/bugalter";
+import Home from "./views/home/Home";
 
 import ErrorPage from "./404/404";
 import IconsAll from "./IconsAll";
@@ -18,6 +19,7 @@ const App = () => {
   return (
     <>
       <Routes>
+        <Route path="/" element={<Home />} />
         <Route path="superadmin/*" element={<SuperAdminLayout />} />
         <Route path="rektor/*" element={<RektorLayout />} />
         <Route path="admin/*" element={<AdminLayout />} />
@@ -26,7 +28,6 @@ const App = () => {
         <Route path="ilmiy-rahbar/*" element={<IlmiyRahbarLayout />} />
         <Route path="ilmiy-texnik/*" element={<IlmiyTexnikLayout />} />
         <Route path="student/*" element={<StudentLayout />} />
-        <Route path="/" element={<Navigate to="/student" replace />} />
 
         <Route path="admin/login" element={<LoginAdmin />} />
         <Route path="student/login" element={<Login />} />

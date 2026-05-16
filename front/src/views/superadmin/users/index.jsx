@@ -16,6 +16,11 @@ const Dashboard = () => {
     phone: "",
     password: "",
     name: "",
+    email: "",
+    orcid: "",
+    affiliation: "",
+    country: "",
+    bio: "",
     roleIds: [], // array of role IDs (numbers)
   });
 
@@ -106,6 +111,11 @@ const Dashboard = () => {
       phone: formData.phone,
       password: formData.password,
       name: formData.name,
+      email: formData.email,
+      orcid: formData.orcid,
+      affiliation: formData.affiliation,
+      country: formData.country,
+      bio: formData.bio,
       roleIds: formData.roleIds,
     };
 
@@ -123,6 +133,11 @@ const Dashboard = () => {
       phone: user.phone,
       password: "", // you might want to leave blank or show placeholder
       name: user.name,
+      email: user.email || "",
+      orcid: user.orcid || "",
+      affiliation: user.affiliation || "",
+      country: user.country || "",
+      bio: user.bio || "",
       roleIds: user.roles?.map((role) => role.id) || [],
     });
     setIsEditing(true);
@@ -135,6 +150,11 @@ const Dashboard = () => {
       phone: "",
       password: "",
       name: "",
+      email: "",
+      orcid: "",
+      affiliation: "",
+      country: "",
+      bio: "",
       roleIds: [],
     });
     setIsEditing(false);
@@ -148,6 +168,11 @@ const Dashboard = () => {
       phone: "",
       password: "",
       name: "",
+      email: "",
+      orcid: "",
+      affiliation: "",
+      country: "",
+      bio: "",
       roleIds: [],
     });
     setIsEditing(false);
@@ -185,6 +210,12 @@ const Dashboard = () => {
                   Telefon / Login
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Email
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Affiliation
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Rollar
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -196,7 +227,7 @@ const Dashboard = () => {
               {users?.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan="7"
                     className="px-6 py-12 text-center text-gray-500"
                   >
                     Foydalanuvchilar topilmadi. Yangi foydalanuvchi qo'shish
@@ -214,6 +245,12 @@ const Dashboard = () => {
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                       {user.phone}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
+                      {user.email || "-"}
+                    </td>
+                    <td className="max-w-xs truncate px-6 py-4 text-sm text-gray-600">
+                      {user.affiliation || "-"}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                       {user.roles?.map((r) => r.name).join(", ") ||
@@ -284,7 +321,7 @@ const Dashboard = () => {
             {/* Name */}
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                To'liq ism
+                To'liq ism <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -300,7 +337,7 @@ const Dashboard = () => {
             {/* Phone / Login */}
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Telefon / Login
+                Telefon / Login <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -313,10 +350,88 @@ const Dashboard = () => {
               />
             </div>
 
+            {/* Email */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="example@domain.com"
+              />
+            </div>
+
+            {/* ORCID */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                ORCID
+              </label>
+              <input
+                type="text"
+                name="orcid"
+                value={formData.orcid}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0000-0000-0000-0000"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Open Researcher and Contributor ID
+              </p>
+            </div>
+
+            {/* Affiliation */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Affiliation (Tashkilot)
+              </label>
+              <input
+                type="text"
+                name="affiliation"
+                value={formData.affiliation}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Buxoro Xalqaro Universiteti"
+              />
+            </div>
+
+            {/* Country */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Mamlakat
+              </label>
+              <input
+                type="text"
+                name="country"
+                value={formData.country}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Uzbekistan"
+              />
+            </div>
+
+            {/* Bio */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Biografiya
+              </label>
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleInputChange}
+                rows="3"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Qisqacha biografiya..."
+              />
+            </div>
+
             {/* Password */}
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Parol
+                Parol {!isEditing && <span className="text-red-500">*</span>}
               </label>
               <input
                 type="password"

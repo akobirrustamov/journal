@@ -16,5 +16,10 @@ public class UserDTO {
     private boolean rememberMe;
     private UUID id;
     private String name;
+    private String email;
+    private String orcid;
+    private String affiliation;
+    private String country;
+    private String bio;
     private List<Integer> roleIds;
 }
