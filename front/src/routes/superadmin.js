@@ -1,6 +1,8 @@
 import MainDashboardSuper from "views/superadmin/default";
 import SuperAdminProfile from "views/superadmin/profile";
 import SuperAdminUsers from "views/superadmin/users";
+import SuperAdminJournals from "views/superadmin/journals";
+import SuperAdminArticles from "views/superadmin/articles";
 import { Student } from "../views/superadmin/student";
 import { Month } from "../views/superadmin/month";
 import { MonthDetail } from "../views/superadmin/month/MonthDetail"
@@ -18,6 +20,8 @@ import {
   MdSchool,
   MdAssignmentTurnedIn,
   MdBarChart,
+  MdMenuBook,
+  MdArticle,
 } from "react-icons/md";
 
 const routes = [
@@ -34,6 +38,20 @@ const routes = [
     path: "users",
     icon: <MdGroup className="h-6 w-6" />,
     component: <SuperAdminUsers />,
+  },
+  {
+    name: "Jurnallar",
+    layout: "/superadmin",
+    path: "journals",
+    icon: <MdMenuBook className="h-6 w-6" />,
+    component: <SuperAdminJournals />,
+  },
+  {
+    name: "Maqolalar",
+    layout: "/superadmin",
+    path: "articles",
+    icon: <MdArticle className="h-6 w-6" />,
+    component: <SuperAdminArticles />,
   },
   {
     name: "Doktorantlar",

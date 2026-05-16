@@ -60,6 +60,45 @@ public class MyFilter extends OncePerRequestFilter {
         System.out.println("Client: " + realIp);
         System.out.println("==============================================");
 
+        // Extract JWT token from Authorization header
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader != null && !authHeader.isEmpty()) {
+            try {
+                String token = authHeader;
+
+                // Validate token
+                if (jwtService.validateToken(token)) {
+                    // Extract user ID from token
+                    String userId = jwtService.extractSubjectFromJwt(token);
+
+                    // Load user from database
+                    UserDetails userDetails = userRepo.findById(UUID.fromString(userId))
+                            .orElse(null);
+
+                    if (userDetails != null) {
+                        // Create authentication token with user's authorities (roles)
+                        UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                            );
+
+                        // Set authentication in SecurityContext
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                        System.out.println("✅ User authenticated: " + userDetails.getUsername());
+                        System.out.println("✅ Roles: " + userDetails.getAuthorities());
+                    }
+                }
+            } catch (ExpiredJwtException e) {
+                System.out.println("❌ Token expired");
+            } catch (Exception e) {
+                System.out.println("❌ Token validation failed: " + e.getMessage());
+            }
+        }
+
         // ⚠️ IMPORTANT: Call next filter
         filterChain.doFilter(request, response);
     }

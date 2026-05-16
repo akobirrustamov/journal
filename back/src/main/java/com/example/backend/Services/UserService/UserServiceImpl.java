@@ -37,6 +37,11 @@ public class UserServiceImpl implements UserService {
                 .phone(dto.getPhone())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .name(dto.getName())
+                .email(dto.getEmail())
+                .orcid(dto.getOrcid())
+                .affiliation(dto.getAffiliation())
+                .country(dto.getCountry())
+                .bio(dto.getBio())
                 .roles(roles)
                 .created_at(LocalDateTime.now())
                 .build();
@@ -61,6 +66,26 @@ public class UserServiceImpl implements UserService {
 
         if (dto.getName() != null) {
             user.setName(dto.getName());
+        }
+
+        if (dto.getEmail() != null) {
+            user.setEmail(dto.getEmail());
+        }
+
+        if (dto.getOrcid() != null) {
+            user.setOrcid(dto.getOrcid());
+        }
+
+        if (dto.getAffiliation() != null) {
+            user.setAffiliation(dto.getAffiliation());
+        }
+
+        if (dto.getCountry() != null) {
+            user.setCountry(dto.getCountry());
+        }
+
+        if (dto.getBio() != null) {
+            user.setBio(dto.getBio());
         }
 
         if (dto.getRoleIds() != null) {
