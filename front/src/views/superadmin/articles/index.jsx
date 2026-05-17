@@ -13,6 +13,9 @@ import {
   XCircle,
   FileText,
   Search,
+  Trash2,
+  Plus,
+  Upload,
 } from "lucide-react";
 
 const Articles = () => {
@@ -32,6 +35,170 @@ const Articles = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const pageSize = 20;
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const [isEditing, setIsEditing] = useState(false);
+
+  const [pdfFile, setPdfFile] = useState(null);
+
+  const [formData, setFormData] = useState({
+    id: "",
+    title: "",
+    abstractText: "",
+    keywords: [],
+    journalId: "",
+    reviewType: "DOUBLE_BLIND",
+    language: "uz",
+    fundingInfo: "",
+    conflictOfInterest: "",
+    license: "CC-BY-4.0",
+  });
+
+  // ─────────────────────────────────────────────
+  // OPEN CREATE
+  // ─────────────────────────────────────────────
+
+  const openCreateModal = () => {
+    setIsEditing(false);
+
+    setPdfFile(null);
+
+    setFormData({
+      id: "",
+      title: "",
+      abstractText: "",
+      keywords: [],
+      journalId: "",
+      reviewType: "DOUBLE_BLIND",
+      language: "uz",
+      fundingInfo: "",
+      conflictOfInterest: "",
+      license: "CC-BY-4.0",
+    });
+
+    setShowCreateModal(true);
+  };
+
+  // ─────────────────────────────────────────────
+  // OPEN EDIT
+  // ─────────────────────────────────────────────
+
+  const openEditModal = (article) => {
+    setIsEditing(true);
+
+    setFormData({
+      id: article.id,
+      title: article.title || "",
+      abstractText: article.abstractText || "",
+      keywords: article.keywords || [],
+      journalId: article.journalId || "",
+      reviewType: article.reviewType || "DOUBLE_BLIND",
+      language: article.language || "uz",
+      fundingInfo: article.fundingInfo || "",
+      conflictOfInterest: article.conflictOfInterest || "",
+      license: article.license || "CC-BY-4.0",
+    });
+
+    setShowCreateModal(true);
+  };
+
+  // ─────────────────────────────────────────────
+  // INPUT CHANGE
+  // ─────────────────────────────────────────────
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+
+      [name]: name === "keywords" ? value.split(",") : value,
+    }));
+  };
+
+  // ─────────────────────────────────────────────
+  // CREATE / UPDATE
+  // ─────────────────────────────────────────────
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+
+      let result;
+
+      // CREATE
+      if (!isEditing) {
+        result = await ApiCall("/api/v1/articles", "POST", formData);
+      } else {
+        // UPDATE
+        result = await ApiCall(
+          `/api/v1/articles/${formData.id}`,
+          "PUT",
+          formData
+        );
+      }
+
+      if (result.error) {
+        alert("Xatolik yuz berdi");
+
+        return;
+      }
+
+      const article = result?.data?.data || result?.data;
+
+      // PDF UPLOAD
+      if (pdfFile && article?.id) {
+        const uploadData = new FormData();
+
+        uploadData.append("file", pdfFile);
+
+        const token = localStorage.getItem("access_token");
+
+        await fetch(`/api/v1/articles/${article.id}/pdf`, {
+          method: "POST",
+
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: uploadData,
+        });
+      }
+
+      await getArticles();
+
+      setShowCreateModal(false);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ─────────────────────────────────────────────
+  // DELETE
+  // ─────────────────────────────────────────────
+
+  const deleteArticle = async (id) => {
+    if (!window.confirm("Maqolani o‘chirmoqchimisiz?")) {
+      return;
+    }
+
+    try {
+      const result = await ApiCall(`/api/v1/articles/${id}`, "DELETE");
+
+      if (!result.error) {
+        await getArticles();
+
+        alert("O‘chirildi");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   // Fetch data on mount
   useEffect(() => {
@@ -54,7 +221,8 @@ const Articles = () => {
 
       const result = await ApiCall(url, "GET");
       if (!result.error && result.data) {
-        const articlesData = result.data?.content || result.data?.data || result.data;
+        const articlesData =
+          result.data?.content || result.data?.data || result.data;
         if (Array.isArray(articlesData)) {
           setArticles(articlesData);
           setTotalPages(result.data?.totalPages || 1);
@@ -76,7 +244,8 @@ const Articles = () => {
     try {
       const result = await ApiCall("/api/v1/journals", "GET");
       if (!result.error && result.data) {
-        const journalsList = result.data?.content || result.data?.data || result.data;
+        const journalsList =
+          result.data?.content || result.data?.data || result.data;
         if (Array.isArray(journalsList)) {
           setJournals(journalsList);
         } else {
@@ -98,7 +267,9 @@ const Articles = () => {
         await getArticles();
         alert("Maqola holati muvaffaqiyatli yangilandi!");
       } else {
-        alert("Xatolik: " + (result.data?.message || "Holatni yangilashda xatolik"));
+        alert(
+          "Xatolik: " + (result.data?.message || "Holatni yangilashda xatolik")
+        );
       }
     } catch (error) {
       console.error("Holatni yangilashda xatolik", error);
@@ -198,6 +369,13 @@ const Articles = () => {
                 <span className="text-sm text-gray-600">
                   Jami: {articles.length} ta maqola
                 </span>
+                <button
+                  onClick={openCreateModal}
+                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
+                >
+                  <Plus size={18} />
+                  Yangi maqola
+                </button>
               </div>
             </div>
           </div>
@@ -322,7 +500,7 @@ const Articles = () => {
                                 {article.title}
                               </p>
                               {article.abstractText && (
-                                <p className="mt-1 line-clamp-2 text-sm text-gray-500">
+                                <p className="line-clamp-2 mt-1 text-sm text-gray-500">
                                   {article.abstractText}
                                 </p>
                               )}
@@ -352,6 +530,19 @@ const Articles = () => {
                             aria-label="Ko'rish"
                           >
                             <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => openEditModal(article)}
+                            className="mr-3 text-yellow-600 hover:text-yellow-800"
+                          >
+                            <Edit size={18} />
+                          </button>
+
+                          <button
+                            onClick={() => deleteArticle(article.id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 size={18} />
                           </button>
                         </td>
                       </tr>
@@ -390,6 +581,147 @@ const Articles = () => {
           )}
         </div>
       </div>
+
+      {/* CREATE / UPDATE MODAL */}
+
+      <Modal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        center
+        styles={{
+          modal: {
+            width: "95%",
+            maxWidth: "900px",
+            borderRadius: "24px",
+            padding: "0",
+          },
+        }}
+      >
+        <form onSubmit={handleSubmit} className="p-6">
+          <h2 className="mb-6 text-2xl font-bold">
+            {isEditing ? "Maqolani tahrirlash" : "Yangi maqola"}
+          </h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* TITLE */}
+            <div className="md:col-span-2">
+              <label className="mb-1 block text-sm font-medium">Sarlavha</label>
+
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                required
+                className="w-full rounded-lg border px-4 py-3"
+              />
+            </div>
+
+            {/* ABSTRACT */}
+            <div className="md:col-span-2">
+              <label className="mb-1 block text-sm font-medium">
+                Annotatsiya
+              </label>
+
+              <textarea
+                rows={5}
+                name="abstractText"
+                value={formData.abstractText}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border px-4 py-3"
+              />
+            </div>
+
+            {/* KEYWORDS */}
+            <div>
+              <label className="mb-1 block text-sm font-medium">
+                Kalit so‘zlar
+              </label>
+
+              <input
+                type="text"
+                name="keywords"
+                value={formData.keywords.join(",")}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border px-4 py-3"
+              />
+            </div>
+
+            {/* JOURNAL */}
+            <div>
+              <label className="mb-1 block text-sm font-medium">Jurnal</label>
+
+              <select
+                name="journalId"
+                value={formData.journalId}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border px-4 py-3"
+              >
+                <option value="">Tanlang</option>
+
+                {journals.map((journal) => (
+                  <option key={journal.id} value={journal.id}>
+                    {journal.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* LANGUAGE */}
+            <div>
+              <label className="mb-1 block text-sm font-medium">Til</label>
+
+              <input
+                type="text"
+                name="language"
+                value={formData.language}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border px-4 py-3"
+              />
+            </div>
+
+            {/* LICENSE */}
+            <div>
+              <label className="mb-1 block text-sm font-medium">License</label>
+
+              <input
+                type="text"
+                name="license"
+                value={formData.license}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border px-4 py-3"
+              />
+            </div>
+
+            {/* PDF */}
+            <div className="md:col-span-2">
+              <label className="mb-1 block text-sm font-medium">PDF fayl</label>
+
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={(e) => setPdfFile(e.target.files[0])}
+                className="w-full rounded-lg border px-4 py-3"
+              />
+            </div>
+          </div>
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setShowCreateModal(false)}
+              className="rounded-lg border px-6 py-3"
+            >
+              Bekor qilish
+            </button>
+
+            <button
+              type="submit"
+              className="rounded-lg bg-indigo-600 px-6 py-3 text-white"
+            >
+              {isEditing ? "Saqlash" : "Yaratish"}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Article Details Modal */}
       <Modal
@@ -442,55 +774,61 @@ const Articles = () => {
                   <h3 className="mb-2 font-semibold text-gray-700">
                     Annotatsiya
                   </h3>
-                  <p className="text-gray-600">{selectedArticle.abstractText}</p>
+                  <p className="text-gray-600">
+                    {selectedArticle.abstractText}
+                  </p>
                 </div>
               )}
 
               {/* Keywords */}
-              {selectedArticle.keywords && selectedArticle.keywords.length > 0 && (
-                <div>
-                  <h3 className="mb-2 font-semibold text-gray-700">
-                    Kalit so'zlar
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedArticle.keywords.map((keyword, idx) => (
-                      <span
-                        key={idx}
-                        className="rounded-full bg-indigo-100 px-3 py-1 text-sm text-indigo-700"
-                      >
-                        {keyword}
-                      </span>
-                    ))}
+              {selectedArticle.keywords &&
+                selectedArticle.keywords.length > 0 && (
+                  <div>
+                    <h3 className="mb-2 font-semibold text-gray-700">
+                      Kalit so'zlar
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedArticle.keywords.map((keyword, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-indigo-100 px-3 py-1 text-sm text-indigo-700"
+                        >
+                          {keyword}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Authors */}
-              {selectedArticle.authors && selectedArticle.authors.length > 0 && (
-                <div>
-                  <h3 className="mb-2 font-semibold text-gray-700">
-                    Mualliflar
-                  </h3>
-                  <div className="space-y-2">
-                    {selectedArticle.authors.map((author, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-2 text-sm text-gray-600"
-                      >
-                        <span className="font-medium">{author.name}</span>
-                        {author.email && (
-                          <span className="text-gray-400">({author.email})</span>
-                        )}
-                        {author.affiliation && (
-                          <span className="text-gray-500">
-                            - {author.affiliation}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+              {selectedArticle.authors &&
+                selectedArticle.authors.length > 0 && (
+                  <div>
+                    <h3 className="mb-2 font-semibold text-gray-700">
+                      Mualliflar
+                    </h3>
+                    <div className="space-y-2">
+                      {selectedArticle.authors.map((author, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 text-sm text-gray-600"
+                        >
+                          <span className="font-medium">{author.name}</span>
+                          {author.email && (
+                            <span className="text-gray-400">
+                              ({author.email})
+                            </span>
+                          )}
+                          {author.affiliation && (
+                            <span className="text-gray-500">
+                              - {author.affiliation}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Metadata */}
               <div className="grid grid-cols-2 gap-4 rounded-lg bg-gray-50 p-4">
@@ -498,9 +836,9 @@ const Articles = () => {
                   <p className="text-sm text-gray-500">Yuborilgan sana</p>
                   <p className="font-medium text-gray-800">
                     {selectedArticle.submittedAt
-                      ? new Date(selectedArticle.submittedAt).toLocaleDateString(
-                          "uz-UZ"
-                        )
+                      ? new Date(
+                          selectedArticle.submittedAt
+                        ).toLocaleDateString("uz-UZ")
                       : "-"}
                   </p>
                 </div>
@@ -537,7 +875,10 @@ const Articles = () => {
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {articleStatuses
-                    .filter((s) => s.value !== "ALL" && s.value !== selectedArticle.status)
+                    .filter(
+                      (s) =>
+                        s.value !== "ALL" && s.value !== selectedArticle.status
+                    )
                     .map((status) => (
                       <button
                         key={status.value}

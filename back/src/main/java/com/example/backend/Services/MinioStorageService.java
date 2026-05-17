@@ -47,7 +47,6 @@ public class MinioStorageService {
      */
     public Attachment upload(MultipartFile file, String bucketName) throws Exception {
         ensureBucketExists(bucketName);
-
         UUID fileId = UUID.randomUUID();
         String objectName = fileId + "_" + sanitizeFilename(file.getOriginalFilename());
 

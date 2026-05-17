@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
+import java.util.UUID;
+
 /** Request DTO for creating or updating a Journal. */
 @Data
 public class JournalRequest {
@@ -39,5 +41,6 @@ public class JournalRequest {
     private String email;
     private String phone;
     private String license;
+    private UUID coverImageId;
 }
 

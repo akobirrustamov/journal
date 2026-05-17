@@ -17,6 +17,18 @@ import java.util.UUID;
 
 @Service
 public class JwtService {
+    private String normalizeToken(String token) {
+        if (token == null) {
+            return null;
+        }
+
+        if (token.startsWith("Bearer ")) {
+            return token.substring(7);
+        }
+
+        return token;
+    }
+
     public String generateJwtToken(User user) {
         UUID id = user.getId();
         Map<String, Object> claims = new HashMap<>();
@@ -57,6 +69,7 @@ public class JwtService {
     }
 
     public String extractSubjectFromJwt(String token) {
+        token = normalizeToken(token);
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build().parseClaimsJws(token)
@@ -68,6 +81,7 @@ public class JwtService {
 
     public boolean validateToken(String token) {
         try {
+            token = normalizeToken(token);
             Jwts.parserBuilder()
                     .setSigningKey(getSigningKey())
                     .build().parseClaimsJws(token)

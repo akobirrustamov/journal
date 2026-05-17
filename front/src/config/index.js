@@ -13,7 +13,7 @@ export default function (url, method, data, param) {
     method: method,
     data: data,
     headers: {
-      Authorization: token,
+      Authorization: `Bearer ${token}`,
     },
     params: param,
   })

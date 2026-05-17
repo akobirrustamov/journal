@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 import ApiCall, { baseUrl } from "../../../config/index";
 import { Modal } from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
-import { Trash2, Edit, X, Plus, Upload, Eye } from "lucide-react";
+import { Trash2, Edit, X, Plus } from "lucide-react";
 
 const Journals = () => {
   // State
   const [journals, setJournals] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [journalToDelete, setJournalToDelete] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
   const [formData, setFormData] = useState({
     id: null,
+    coverImageId: "",
     title: "",
     titleAbbr: "",
     issnPrint: "",
@@ -50,7 +50,11 @@ const Journals = () => {
       const result = await ApiCall("/api/v1/journals", "GET");
       if (!result.error && result.data) {
         // Handle pagination response - backend returns Page<JournalResponse> wrapped in ApiResponse
-        const journalsList = result.data?.data?.content || result.data?.content || result.data?.data || result.data;
+        const journalsList =
+          result.data?.data?.content ||
+          result.data?.content ||
+          result.data?.data ||
+          result.data;
         // Ensure it's an array
         if (Array.isArray(journalsList)) {
           setJournals(journalsList);
@@ -70,24 +74,17 @@ const Journals = () => {
   const createJournal = async (journalData) => {
     try {
       setLoading(true);
+
       const result = await ApiCall("/api/v1/journals", "POST", journalData);
-      if (!result.error) {
-        const createdJournalId = result.data?.data?.id || result.data?.id;
-
-        // Upload cover if file is selected
-        if (coverFile && createdJournalId) {
-          await uploadCoverImage(createdJournalId);
-        }
-
-        await getJournals();
-        closeModal();
-        alert("Jurnal muvaffaqiyatli yaratildi!");
-      } else {
-        alert("Xatolik: " + (result.data?.message || "Jurnal yaratishda xatolik"));
+      if (result.error) {
+        throw new Error(result.data?.message || "Jurnal yaratilmadi");
       }
+
+      await getJournals();
+
+      closeModal();
     } catch (error) {
-      console.error("Yaratishda xatolik", error);
-      alert("Jurnal yaratishda xatolik yuz berdi");
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -96,22 +93,25 @@ const Journals = () => {
   const updateJournal = async (id, journalData) => {
     try {
       setLoading(true);
-      const result = await ApiCall(`/api/v1/journals/${id}`, "PUT", journalData);
-      if (!result.error) {
-        // Upload cover if file is selected
-        if (coverFile) {
-          await uploadCoverImage(id);
-        }
 
-        await getJournals();
-        closeModal();
-        alert("Jurnal muvaffaqiyatli yangilandi!");
-      } else {
-        alert("Xatolik: " + (result.data?.message || "Jurnalni yangilashda xatolik"));
+      // 1. Update journal
+      const result = await ApiCall(
+        `/api/v1/journals/${id}`,
+        "PUT",
+        journalData
+      );
+
+      if (result.error) {
+        throw new Error(result.data?.message || "Jurnal yangilanmadi");
       }
+
+      await getJournals();
+
+      closeModal();
+
+      alert("Yangilandi");
     } catch (error) {
-      console.error("Yangilashda xatolik", error);
-      alert("Jurnalni yangilashda xatolik yuz berdi");
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -131,32 +131,27 @@ const Journals = () => {
       }
     }
   };
-
-  const uploadCoverImage = async (journalId) => {
+  const uploadCoverImage = async (journalId, file) => {
     try {
       const formData = new FormData();
-      formData.append("file", coverFile);
+
+      formData.append("file", file);
 
       const token = localStorage.getItem("access_token");
-      const response = await fetch(
+
+      await axios.post(
         `${baseUrl}/api/v1/journals/${journalId}/cover`,
+        formData,
         {
-          method: "POST",
           headers: {
-            Authorization: token,
+            Authorization: `Bearer ${token}`,
           },
-          body: formData,
         }
       );
-
-      if (!response.ok) {
-        throw new Error("Cover upload failed");
-      }
-
-      console.log("Cover image uploaded successfully");
     } catch (error) {
-      console.error("Cover upload error:", error);
-      alert("Muqova rasmini yuklashda xatolik yuz berdi");
+      console.error(error);
+
+      alert("Rasm yuklanmadi");
     }
   };
 
@@ -186,10 +181,9 @@ const Journals = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Prepare payload
     const payload = {
       title: formData.title,
       titleAbbr: formData.titleAbbr,
@@ -214,10 +208,51 @@ const Journals = () => {
       license: formData.license,
     };
 
-    if (isEditing && formData.id) {
-      updateJournal(formData.id, payload);
-    } else {
-      createJournal(payload);
+    try {
+      setLoading(true);
+
+      let result;
+
+      // CREATE
+      // CREATE
+      if (!isEditing) {
+        result = await ApiCall("/api/v1/journals", "POST", payload);
+
+        if (result.error) {
+          throw new Error("Jurnal yaratilmadi");
+        }
+
+        const createdJournal = result?.data?.data;
+
+        // upload image AFTER create
+        if (coverFile && createdJournal?.id) {
+          await uploadCoverImage(createdJournal.id, coverFile);
+        }
+      } else {
+        // UPDATE
+        result = await ApiCall(
+          `/api/v1/journals/${formData.id}`,
+          "PUT",
+          payload
+        );
+
+        if (result.error) {
+          throw new Error("Yangilanmadi");
+        }
+
+        // upload image AFTER update
+        if (coverFile) {
+          await uploadCoverImage(formData.id, coverFile);
+        }
+      }
+
+      await getJournals();
+
+      closeModal();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -246,6 +281,8 @@ const Journals = () => {
       phone: journal.phone || "",
       license: journal.license || "CC BY 4.0",
     });
+    setCoverFile(null);
+    setCoverPreview(journal.coverImageUrl);
     setIsEditing(true);
     setShowModal(true);
   };
@@ -253,6 +290,7 @@ const Journals = () => {
   const openCreateModal = () => {
     setFormData({
       id: null,
+      coverImageId: "",
       title: "",
       titleAbbr: "",
       issnPrint: "",
@@ -283,6 +321,7 @@ const Journals = () => {
     setShowModal(false);
     setFormData({
       id: null,
+      coverImageId: "",
       title: "",
       titleAbbr: "",
       issnPrint: "",
@@ -321,8 +360,8 @@ const Journals = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl bg-white shadow-lg">
+    <div className="min-h-screen  py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-8xl mx-auto overflow-hidden rounded-2xl bg-white shadow-lg">
         {/* Header */}
         <div className="flex flex-col items-center justify-between border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 p-6 sm:flex-row">
           <div>
@@ -363,33 +402,38 @@ const Journals = () => {
                   className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md"
                 >
                   {/* Cover Image */}
-                  {journal.coverImageId ? (
-                    <div className="h-48 w-full bg-gradient-to-r from-purple-500 to-indigo-600">
-                      <img
-                        src={`${baseUrl}/api/v1/file/img/${journal.coverImageId}`}
-                        alt={journal.title}
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          e.target.parentElement.innerHTML = `<div class="flex h-full items-center justify-center bg-gradient-to-r from-purple-500 to-indigo-600"><h3 class="text-lg font-bold text-white px-4 text-center">${journal.title}</h3></div>`;
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-4">
-                      <h3 className="text-lg font-bold text-white">
-                        {journal.title}
-                      </h3>
-                      {journal.titleAbbr && (
-                        <p className="mt-1 text-sm text-purple-100">
-                          {journal.titleAbbr}
-                        </p>
-                      )}
-                    </div>
-                  )}
+                  {(() => {
+                    const coverImageSrc = journal.coverImageUrl;
+
+                    return coverImageSrc ? (
+                      <div className="h-48 w-full bg-gradient-to-r from-purple-500 to-indigo-600">
+                        <img
+                          src={coverImageSrc}
+                          alt={journal.title}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            e.target.parentElement.innerHTML = `<div class="flex h-full items-center justify-center bg-gradient-to-r from-purple-500 to-indigo-600"><h3 class="text-lg font-bold text-white px-4 text-center">${journal.title}</h3></div>`;
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-4">
+                        <h3 className="text-lg font-bold text-white">
+                          {journal.title}
+                        </h3>
+
+                        {journal.titleAbbr && (
+                          <p className="mt-1 text-sm text-purple-100">
+                            {journal.titleAbbr}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   <div className="p-4">
-                    {journal.coverImageId && (
+                    {(journal.coverImageUrl || journal.coverImageId) && (
                       <h3 className="mb-2 text-lg font-bold text-gray-800">
                         {journal.title}
                       </h3>
@@ -423,16 +467,17 @@ const Journals = () => {
                       )}
                     </div>
                     {journal.shortDescription && (
-                      <p className="mb-3 line-clamp-2 text-sm text-gray-500">
+                      <p className="line-clamp-2 mb-3 text-sm text-gray-500">
                         {journal.shortDescription}
                       </p>
                     )}
                     <div className="flex items-center justify-between">
                       <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${journal.active
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          journal.active
                             ? "bg-green-100 text-green-700"
                             : "bg-gray-100 text-gray-600"
-                          }`}
+                        }`}
                       >
                         {journal.active ? "Faol" : "Nofaol"}
                       </span>
@@ -627,9 +672,7 @@ const Journals = () => {
 
             {/* Cover Image Upload */}
             <div className="rounded-lg bg-gray-50 p-4">
-              <h3 className="mb-3 font-semibold text-gray-700">
-                Muqova rasmi
-              </h3>
+              <h3 className="mb-3 font-semibold text-gray-700">Muqova rasmi</h3>
               <div className="space-y-4">
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
@@ -893,8 +936,8 @@ const Journals = () => {
                 {loading
                   ? "Saqlanmoqda..."
                   : isEditing
-                    ? "Yangilash"
-                    : "Yaratish"}
+                  ? "Yangilash"
+                  : "Yaratish"}
               </button>
             </div>
           </form>

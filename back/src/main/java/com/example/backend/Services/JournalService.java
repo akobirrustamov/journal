@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -33,27 +34,32 @@ public class JournalService {
     // ── CRUD ──────────────────────────────────────────────────────────
 
     @Transactional
-    public JournalResponse create(JournalRequest req) {
-        String slug = slugService.uniqueJournalSlug(req.getTitle(), journalRepo);
+    public JournalResponse create(
+            JournalRequest req
+    ) {
 
         Journal journal = Journal.builder()
+
                 .title(req.getTitle())
                 .titleAbbr(req.getTitleAbbr())
-                .slug(slug)
                 .issnPrint(req.getIssnPrint())
                 .issnOnline(req.getIssnOnline())
                 .isbn(req.getIsbn())
                 .doi(req.getDoi())
                 .description(req.getDescription())
                 .shortDescription(req.getShortDescription())
-                .publicationFrequency(req.getPublicationFrequency())
+                .publicationFrequency(
+                        req.getPublicationFrequency()
+                )
                 .foundedYear(req.getFoundedYear())
                 .publisher(req.getPublisher())
-                .language(req.getLanguage() != null ? req.getLanguage() : "en")
+                .language(req.getLanguage())
                 .country(req.getCountry())
                 .scope(req.getScope())
                 .metaTitle(req.getMetaTitle())
-                .metaDescription(req.getMetaDescription())
+                .metaDescription(
+                        req.getMetaDescription()
+                )
                 .metaKeywords(req.getMetaKeywords())
                 .openAccess(req.isOpenAccess())
                 .website(req.getWebsite())
@@ -63,43 +69,112 @@ public class JournalService {
                 .active(true)
                 .build();
 
-        return toResponse(journalRepo.save(journal));
+        return toResponse(
+                journalRepo.save(journal)
+        );
+    }
+    @Transactional
+    public JournalResponse update(
+            UUID id,
+            JournalRequest req
+    ) {
+
+        Journal journal = getEntity(id);
+
+        if (req.getTitle() != null)
+            journal.setTitle(req.getTitle());
+
+        if (req.getTitleAbbr() != null)
+            journal.setTitleAbbr(req.getTitleAbbr());
+
+        if (req.getIssnPrint() != null)
+            journal.setIssnPrint(req.getIssnPrint());
+
+        if (req.getIssnOnline() != null)
+            journal.setIssnOnline(req.getIssnOnline());
+
+        if (req.getIsbn() != null)
+            journal.setIsbn(req.getIsbn());
+
+        if (req.getDescription() != null)
+            journal.setDescription(req.getDescription());
+
+        if (req.getShortDescription() != null)
+            journal.setShortDescription(req.getShortDescription());
+
+        if (req.getPublicationFrequency() != null)
+            journal.setPublicationFrequency(
+                    req.getPublicationFrequency()
+            );
+
+        if (req.getFoundedYear() != null)
+            journal.setFoundedYear(
+                    req.getFoundedYear()
+            );
+
+        if (req.getPublisher() != null)
+            journal.setPublisher(req.getPublisher());
+
+        if (req.getLanguage() != null)
+            journal.setLanguage(req.getLanguage());
+
+        if (req.getCountry() != null)
+            journal.setCountry(req.getCountry());
+
+        if (req.getScope() != null)
+            journal.setScope(req.getScope());
+
+        if (req.getMetaTitle() != null)
+            journal.setMetaTitle(req.getMetaTitle());
+
+        if (req.getMetaDescription() != null)
+            journal.setMetaDescription(
+                    req.getMetaDescription()
+            );
+
+        if (req.getMetaKeywords() != null)
+            journal.setMetaKeywords(
+                    req.getMetaKeywords()
+            );
+
+        if (req.getWebsite() != null)
+            journal.setWebsite(req.getWebsite());
+
+        if (req.getEmail() != null)
+            journal.setEmail(req.getEmail());
+
+        if (req.getPhone() != null)
+            journal.setPhone(req.getPhone());
+
+        if (req.getLicense() != null)
+            journal.setLicense(req.getLicense());
+
+        return toResponse(
+                journalRepo.save(journal)
+        );
     }
 
     @Transactional
-    public JournalResponse update(UUID id, JournalRequest req) {
+    public void uploadCoverImage(
+            UUID id,
+            MultipartFile file
+    ) throws Exception {
+
         Journal journal = getEntity(id);
 
-        if (req.getTitle() != null) journal.setTitle(req.getTitle());
-        if (req.getTitleAbbr() != null) journal.setTitleAbbr(req.getTitleAbbr());
-        if (req.getIssnPrint() != null) journal.setIssnPrint(req.getIssnPrint());
-        if (req.getIssnOnline() != null) journal.setIssnOnline(req.getIssnOnline());
-        if (req.getIsbn() != null) journal.setIsbn(req.getIsbn());
-        if (req.getDoi() != null) journal.setDoi(req.getDoi());
-        if (req.getDescription() != null) journal.setDescription(req.getDescription());
-        if (req.getShortDescription() != null) journal.setShortDescription(req.getShortDescription());
-        if (req.getPublicationFrequency() != null) journal.setPublicationFrequency(req.getPublicationFrequency());
-        if (req.getFoundedYear() != null) journal.setFoundedYear(req.getFoundedYear());
-        if (req.getPublisher() != null) journal.setPublisher(req.getPublisher());
-        if (req.getLanguage() != null) journal.setLanguage(req.getLanguage());
-        if (req.getCountry() != null) journal.setCountry(req.getCountry());
-        if (req.getScope() != null) journal.setScope(req.getScope());
-        if (req.getMetaTitle() != null) journal.setMetaTitle(req.getMetaTitle());
-        if (req.getMetaDescription() != null) journal.setMetaDescription(req.getMetaDescription());
-        if (req.getMetaKeywords() != null) journal.setMetaKeywords(req.getMetaKeywords());
-        if (req.getWebsite() != null) journal.setWebsite(req.getWebsite());
-        if (req.getEmail() != null) journal.setEmail(req.getEmail());
-        if (req.getPhone() != null) journal.setPhone(req.getPhone());
-        if (req.getLicense() != null) journal.setLicense(req.getLicense());
+        Attachment cover =
+                Attachment.createAttachment(
+                        file,
+                        "/journals"
+                );
 
-        return toResponse(journalRepo.save(journal));
-    }
+        // SAVE ATTACHMENT FIRST
+        cover = attachmentRepo.save(cover);
 
-    @Transactional
-    public void uploadCoverImage(UUID id, MultipartFile file) throws Exception {
-        Journal journal = getEntity(id);
-        Attachment cover = storageService.uploadJournalCover(file);
+        // SET TO JOURNAL
         journal.setCoverImage(cover);
+
+        // SAVE JOURNAL
         journalRepo.save(journal);
     }
 

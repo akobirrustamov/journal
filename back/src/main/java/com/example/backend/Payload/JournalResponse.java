@@ -12,6 +12,7 @@ import java.util.UUID;
 @Builder
 public class JournalResponse {
     private UUID id;
+    private UUID coverImageId;
     private String title;
     private String titleAbbr;
     private String slug;
