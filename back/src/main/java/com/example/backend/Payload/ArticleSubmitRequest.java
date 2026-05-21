@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -39,6 +40,16 @@ public class ArticleSubmitRequest {
     private String conflictOfInterest;
 
     private String license;
+
+    private Integer pageStart;
+
+    private Integer pageEnd;
+
+    private LocalDate receivedDate;
+
+    private String metaTitle;
+
+    private String metaDescription;
 
     // ── Nested DTOs ─────────────────────────────────────────────────
 

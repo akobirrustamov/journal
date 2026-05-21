@@ -24,6 +24,8 @@ public interface ArticleRepo extends JpaRepository<Article, UUID> {
 
     Page<Article> findAllByJournalIdAndStatus(UUID journalId, ArticleStatus status, Pageable pageable);
 
+    Page<Article> findAllByJournalId(UUID journalId, Pageable pageable);
+
     Page<Article> findAllByIssueId(UUID issueId, Pageable pageable);
 
     Page<Article> findAllBySubmittedById(UUID userId, Pageable pageable);

@@ -25,6 +25,8 @@ const Articles = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [issuesForAssign, setIssuesForAssign] = useState([]);
+  const [selectedIssueId, setSelectedIssueId] = useState("");
   const [filters, setFilters] = useState({
     status: "ALL",
     journalId: "",
@@ -53,6 +55,10 @@ const Articles = () => {
     fundingInfo: "",
     conflictOfInterest: "",
     license: "CC-BY-4.0",
+    pageStart: "",
+    pageEnd: "",
+    receivedDate: "",
+    authors: [],
   });
 
   // ─────────────────────────────────────────────
@@ -75,6 +81,10 @@ const Articles = () => {
       fundingInfo: "",
       conflictOfInterest: "",
       license: "CC-BY-4.0",
+      pageStart: "",
+      pageEnd: "",
+      receivedDate: "",
+      authors: [],
     });
 
     setShowCreateModal(true);
@@ -98,6 +108,10 @@ const Articles = () => {
       fundingInfo: article.fundingInfo || "",
       conflictOfInterest: article.conflictOfInterest || "",
       license: article.license || "CC-BY-4.0",
+      pageStart: article.pageStart || "",
+      pageEnd: article.pageEnd || "",
+      receivedDate: article.receivedDate ? article.receivedDate.split("T")[0] : "",
+      authors: article.authors || [],
     });
 
     setShowCreateModal(true);
@@ -109,11 +123,34 @@ const Articles = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
+      [name]: name === "keywords" ? value.split(",").map((k) => k.trim()) : value,
+    }));
+  };
 
-      [name]: name === "keywords" ? value.split(",") : value,
+  const addAuthor = () => {
+    setFormData((prev) => ({
+      ...prev,
+      authors: [
+        ...prev.authors,
+        { fullName: "", email: "", affiliation: "", orcid: "", corresponding: false, orderIndex: prev.authors.length },
+      ],
+    }));
+  };
+
+  const updateAuthor = (index, field, value) => {
+    setFormData((prev) => {
+      const updated = [...prev.authors];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, authors: updated };
+    });
+  };
+
+  const removeAuthor = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      authors: prev.authors.filter((_, i) => i !== index).map((a, i) => ({ ...a, orderIndex: i })),
     }));
   };
 
@@ -127,18 +164,30 @@ const Articles = () => {
     try {
       setLoading(true);
 
+      const payload = {
+        journalId: formData.journalId || null,
+        title: formData.title,
+        abstractText: formData.abstractText,
+        keywords: formData.keywords.filter(Boolean),
+        reviewType: formData.reviewType,
+        language: formData.language,
+        fundingInfo: formData.fundingInfo || null,
+        conflictOfInterest: formData.conflictOfInterest || null,
+        license: formData.license || null,
+        pageStart: formData.pageStart ? parseInt(formData.pageStart) : null,
+        pageEnd: formData.pageEnd ? parseInt(formData.pageEnd) : null,
+        receivedDate: formData.receivedDate || null,
+        authors: formData.authors,
+      };
+
       let result;
 
       // CREATE
       if (!isEditing) {
-        result = await ApiCall("/api/v1/articles", "POST", formData);
+        result = await ApiCall("/api/v1/articles/submit", "POST", payload);
       } else {
         // UPDATE
-        result = await ApiCall(
-          `/api/v1/articles/${formData.id}`,
-          "PUT",
-          formData
-        );
+        result = await ApiCall(`/api/v1/articles/${formData.id}`, "PUT", payload);
       }
 
       if (result.error) {
@@ -221,11 +270,11 @@ const Articles = () => {
 
       const result = await ApiCall(url, "GET");
       if (!result.error && result.data) {
-        const articlesData =
-          result.data?.content || result.data?.data || result.data;
+        const raw = result.data?.data || result.data;
+        const articlesData = raw?.content || raw;
         if (Array.isArray(articlesData)) {
           setArticles(articlesData);
-          setTotalPages(result.data?.totalPages || 1);
+          setTotalPages(raw?.totalPages || 1);
         } else {
           setArticles([]);
         }
@@ -242,15 +291,11 @@ const Articles = () => {
 
   const getJournals = async () => {
     try {
-      const result = await ApiCall("/api/v1/journals", "GET");
+      const result = await ApiCall("/api/v1/journals?page=0&size=100", "GET");
       if (!result.error && result.data) {
-        const journalsList =
-          result.data?.content || result.data?.data || result.data;
-        if (Array.isArray(journalsList)) {
-          setJournals(journalsList);
-        } else {
-          setJournals([]);
-        }
+        const raw = result.data?.data || result.data;
+        const journalsList = raw?.content || raw;
+        setJournals(Array.isArray(journalsList) ? journalsList : []);
       }
     } catch (error) {
       console.error("Jurnallarni olishda xatolik", error);
@@ -277,14 +322,53 @@ const Articles = () => {
     }
   };
 
-  const viewArticleDetails = (article) => {
+  const viewArticleDetails = async (article) => {
     setSelectedArticle(article);
+    setSelectedIssueId(article.issueId || "");
     setShowModal(true);
+    if (article.journalId || article.journal?.id) {
+      const jId = article.journalId || article.journal?.id;
+      const res = await ApiCall(`/api/v1/journals/${jId}/issues`, "GET");
+      if (!res.error) {
+        const list = res.data?.data || res.data || [];
+        setIssuesForAssign(Array.isArray(list) ? list : []);
+      }
+    }
   };
 
   const closeModal = () => {
     setShowModal(false);
     setSelectedArticle(null);
+    setIssuesForAssign([]);
+    setSelectedIssueId("");
+  };
+
+  const resetArticle = async () => {
+    if (!selectedArticle) return;
+    if (!window.confirm("Maqolani SUBMITTED holatiga qaytarmoqchimisiz?")) return;
+    const res = await ApiCall(`/api/v1/articles/${selectedArticle.id}/reset`, "PUT");
+    if (!res.error) {
+      await getArticles();
+      setSelectedArticle((prev) => ({ ...prev, status: "SUBMITTED" }));
+      alert("Maqola holati SUBMITTED ga qaytarildi!");
+    } else {
+      alert("Xatolik: " + (res.data?.message || "Qayta o'rnatib bo'lmadi"));
+    }
+  };
+
+  const assignToIssue = async () => {
+    if (!selectedIssueId || !selectedArticle) return;
+    const res = await ApiCall(
+      `/api/v1/articles/${selectedArticle.id}/assign-issue?issueId=${selectedIssueId}`,
+      "PUT"
+    );
+    if (!res.error) {
+      alert("Maqola songa biriktirildi!");
+      await getArticles();
+      closeModal();
+    } else {
+      alert("Xatolik: " + (res.data?.message || "Biriktirish amalga oshmadi"));
+    }
   };
 
   // ---------- Filter Handlers ----------
@@ -311,6 +395,18 @@ const Articles = () => {
     { value: "REJECTED", label: "Rad etilgan", color: "red" },
     { value: "ARCHIVED", label: "Arxivlangan", color: "gray" },
   ];
+
+  // Valid transitions mirror backend validateTransition logic
+  const validTransitions = {
+    DRAFT:             ["SUBMITTED"],
+    SUBMITTED:         ["UNDER_REVIEW", "REJECTED"],
+    UNDER_REVIEW:      ["REVISION_REQUIRED", "ACCEPTED", "REJECTED"],
+    REVISION_REQUIRED: ["SUBMITTED", "REJECTED"],
+    ACCEPTED:          ["PUBLISHED", "REJECTED"],
+    PUBLISHED:         ["ARCHIVED"],
+    ARCHIVED:          [],
+    REJECTED:          [],
+  };
 
   const getStatusBadge = (status) => {
     const statusConfig = articleStatuses.find((s) => s.value === status);
@@ -682,7 +778,6 @@ const Articles = () => {
             {/* LICENSE */}
             <div>
               <label className="mb-1 block text-sm font-medium">License</label>
-
               <input
                 type="text"
                 name="license"
@@ -690,6 +785,117 @@ const Articles = () => {
                 onChange={handleInputChange}
                 className="w-full rounded-lg border px-4 py-3"
               />
+            </div>
+
+            {/* PAGE START / END */}
+            <div>
+              <label className="mb-1 block text-sm font-medium">Boshlang'ich sahifa</label>
+              <input
+                type="number"
+                name="pageStart"
+                value={formData.pageStart}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border px-4 py-3"
+                min="1"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Oxirgi sahifa</label>
+              <input
+                type="number"
+                name="pageEnd"
+                value={formData.pageEnd}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border px-4 py-3"
+                min="1"
+              />
+            </div>
+
+            {/* RECEIVED DATE */}
+            <div>
+              <label className="mb-1 block text-sm font-medium">Qabul qilingan sana</label>
+              <input
+                type="date"
+                name="receivedDate"
+                value={formData.receivedDate}
+                onChange={handleInputChange}
+                className="w-full rounded-lg border px-4 py-3"
+              />
+            </div>
+
+            {/* AUTHORS */}
+            <div className="md:col-span-2">
+              <div className="mb-2 flex items-center justify-between">
+                <label className="text-sm font-medium">Mualliflar</label>
+                <button
+                  type="button"
+                  onClick={addAuthor}
+                  className="flex items-center gap-1 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-100"
+                >
+                  <Plus size={14} /> Muallif qo'shish
+                </button>
+              </div>
+              {formData.authors.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-gray-300 py-4 text-center text-sm text-gray-400">
+                  Muallif qo'shilmagan
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {formData.authors.map((author, idx) => (
+                    <div key={idx} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-500">Muallif {idx + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeAuthor(idx)}
+                          className="text-red-400 hover:text-red-600"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          placeholder="To'liq ism *"
+                          value={author.fullName}
+                          onChange={(e) => updateAuthor(idx, "fullName", e.target.value)}
+                          required
+                          className="col-span-2 rounded border px-3 py-2 text-sm"
+                        />
+                        <input
+                          type="email"
+                          placeholder="Email"
+                          value={author.email}
+                          onChange={(e) => updateAuthor(idx, "email", e.target.value)}
+                          className="rounded border px-3 py-2 text-sm"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Tashkilot"
+                          value={author.affiliation}
+                          onChange={(e) => updateAuthor(idx, "affiliation", e.target.value)}
+                          className="rounded border px-3 py-2 text-sm"
+                        />
+                        <input
+                          type="text"
+                          placeholder="ORCID"
+                          value={author.orcid}
+                          onChange={(e) => updateAuthor(idx, "orcid", e.target.value)}
+                          className="rounded border px-3 py-2 text-sm"
+                        />
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={author.corresponding}
+                            onChange={(e) => updateAuthor(idx, "corresponding", e.target.checked)}
+                          />
+                          Mos muallif
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* PDF */}
@@ -873,25 +1079,76 @@ const Articles = () => {
                 <h3 className="mb-3 font-semibold text-gray-700">
                   Holatni o'zgartirish
                 </h3>
-                <div className="flex flex-wrap gap-2">
-                  {articleStatuses
-                    .filter(
-                      (s) =>
-                        s.value !== "ALL" && s.value !== selectedArticle.status
-                    )
-                    .map((status) => (
-                      <button
-                        key={status.value}
-                        onClick={() =>
-                          updateArticleStatus(selectedArticle.id, status.value)
-                        }
-                        className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                      >
-                        {status.label}
-                      </button>
-                    ))}
-                </div>
+                {(() => {
+                  const allowed = validTransitions[selectedArticle.status] || [];
+                  if (allowed.length === 0) {
+                    return (
+                      <div className="flex items-center justify-between gap-4">
+                        <p className="text-sm text-gray-400 italic">
+                          Bu holat yakuniy — o'zgartirib bo'lmaydi
+                          {selectedArticle.status === "REJECTED" ? " (rad etilgan)" : " (arxivlangan)"}
+                        </p>
+                        <button
+                          onClick={resetArticle}
+                          className="shrink-0 rounded-lg border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 transition hover:bg-orange-100"
+                        >
+                          Qayta yuborish (SUBMITTED)
+                        </button>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="flex flex-wrap gap-2">
+                      {articleStatuses
+                        .filter((s) => allowed.includes(s.value))
+                        .map((status) => (
+                          <button
+                            key={status.value}
+                            onClick={() => updateArticleStatus(selectedArticle.id, status.value)}
+                            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                          >
+                            {status.label}
+                          </button>
+                        ))}
+                    </div>
+                  );
+                })()}
               </div>
+
+              {/* Assign to Issue */}
+              {issuesForAssign.length > 0 && (
+                <div className="rounded-lg border border-gray-200 p-4">
+                  <h3 className="mb-3 font-semibold text-gray-700">Songa biriktirish</h3>
+                  <div className="flex gap-3">
+                    <select
+                      value={selectedIssueId}
+                      onChange={(e) => setSelectedIssueId(e.target.value)}
+                      className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="">Son tanlang...</option>
+                      {issuesForAssign.map((issue) => (
+                        <option key={issue.id} value={issue.id}>
+                          Tom {issue.volumeNumber}, Son {issue.issueNumber}
+                          {issue.title ? ` — ${issue.title}` : ""}
+                          {issue.current ? " (joriy)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={assignToIssue}
+                      disabled={!selectedIssueId}
+                      className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-40"
+                    >
+                      Biriktirish
+                    </button>
+                  </div>
+                  {selectedArticle.issueId && (
+                    <p className="mt-2 text-xs text-gray-400">
+                      Hozir biriktirilgan: Tom {selectedArticle.volumeNumber}, Son {selectedArticle.issueNumber}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* PDF Download */}
               {selectedArticle.pdfFile && (

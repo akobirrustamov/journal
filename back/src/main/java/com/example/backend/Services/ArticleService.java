@@ -57,6 +57,11 @@ public class ArticleService {
                 .fundingInfo(req.getFundingInfo())
                 .conflictOfInterest(req.getConflictOfInterest())
                 .license(req.getLicense())
+                .pageStart(req.getPageStart())
+                .pageEnd(req.getPageEnd())
+                .receivedDate(req.getReceivedDate())
+                .metaTitle(req.getMetaTitle())
+                .metaDescription(req.getMetaDescription())
                 .build();
 
         article = articleRepo.save(article);
@@ -95,6 +100,58 @@ public class ArticleService {
         log.info("Article submitted: {} by {}", article.getId(), submittedBy.getUsername());
 
         return toResponse(article);
+    }
+
+    // ── Superadmin Reset ──────────────────────────────────────────────
+
+    @Transactional
+    public ArticleResponse reset(UUID articleId) {
+        Article article = getEntity(articleId);
+        article.setStatus(ArticleStatus.SUBMITTED);
+        log.info("Article {} force-reset to SUBMITTED by superadmin", articleId);
+        return toResponse(articleRepo.save(article));
+    }
+
+    // ── Admin Update ──────────────────────────────────────────────────
+
+    @Transactional
+    public ArticleResponse update(UUID articleId, ArticleSubmitRequest req) {
+        Article article = getEntity(articleId);
+        Journal journal = journalService.getEntity(req.getJournalId());
+
+        article.setTitle(req.getTitle());
+        article.setAbstractText(req.getAbstractText());
+        article.setKeywords(req.getKeywords());
+        article.setJournal(journal);
+        article.setReviewType(req.getReviewType());
+        article.setLanguage(req.getLanguage());
+        article.setFundingInfo(req.getFundingInfo());
+        article.setConflictOfInterest(req.getConflictOfInterest());
+        article.setLicense(req.getLicense());
+        article.setPageStart(req.getPageStart());
+        article.setPageEnd(req.getPageEnd());
+        article.setReceivedDate(req.getReceivedDate());
+        article.setMetaTitle(req.getMetaTitle());
+        article.setMetaDescription(req.getMetaDescription());
+
+        // Replace authors
+        authorRepo.deleteAll(article.getAuthors());
+        article.getAuthors().clear();
+        if (req.getAuthors() != null) {
+            List<ArticleAuthor> authors = req.getAuthors().stream().map(a -> ArticleAuthor.builder()
+                    .article(article)
+                    .fullName(a.getFullName())
+                    .email(a.getEmail())
+                    .orcid(a.getOrcid())
+                    .affiliation(a.getAffiliation())
+                    .country(a.getCountry())
+                    .corresponding(a.isCorresponding())
+                    .orderIndex(a.getOrderIndex())
+                    .build()).collect(Collectors.toList());
+            authorRepo.saveAll(authors);
+        }
+
+        return toResponse(articleRepo.save(article));
     }
 
     // ── PDF Upload ────────────────────────────────────────────────────
@@ -162,6 +219,19 @@ public class ArticleService {
     @Transactional(readOnly = true)
     public Page<ArticleResponse> getPublished(Pageable pageable) {
         return articleRepo.findAllByStatus(ArticleStatus.PUBLISHED, pageable).map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ArticleResponse> getAdminList(UUID journalId, ArticleStatus status, Pageable pageable) {
+        if (journalId != null && status != null) {
+            return articleRepo.findAllByJournalIdAndStatus(journalId, status, pageable).map(this::toResponse);
+        } else if (journalId != null) {
+            return articleRepo.findAllByJournalId(journalId, pageable).map(this::toResponse);
+        } else if (status != null) {
+            return articleRepo.findAllByStatus(status, pageable).map(this::toResponse);
+        } else {
+            return articleRepo.findAll(pageable).map(this::toResponse);
+        }
     }
 
     @Transactional(readOnly = true)

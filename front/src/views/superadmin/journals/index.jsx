@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import ApiCall, { baseUrl } from "../../../config/index";
+import { fileUrl } from "../../../config/fileUrl";
 import { Modal } from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
 import { Trash2, Edit, X, Plus } from "lucide-react";
@@ -403,7 +404,7 @@ const Journals = () => {
                 >
                   {/* Cover Image */}
                   {(() => {
-                    const coverImageSrc = journal.coverImageUrl;
+                    const coverImageSrc = fileUrl(journal.coverImageUrl);
 
                     return coverImageSrc ? (
                       <div className="h-48 w-full bg-gradient-to-r from-purple-500 to-indigo-600">

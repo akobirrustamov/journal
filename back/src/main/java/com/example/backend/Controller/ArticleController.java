@@ -155,6 +155,22 @@ public class ArticleController {
 
     // ── Editor / Admin ────────────────────────────────────────────────
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN','JOURNAL_ADMIN','EDITOR')")
+    @Operation(summary = "Update article details (admin/editor only)")
+    public ResponseEntity<ApiResponse<ArticleResponse>> update(
+            @PathVariable UUID id,
+            @Valid @RequestBody ArticleSubmitRequest req) {
+        return ResponseEntity.ok(ApiResponse.ok("Article updated.", articleService.update(id, req)));
+    }
+
+    @PutMapping("/{id}/reset")
+    @PreAuthorize("hasRole('SUPERADMIN')")
+    @Operation(summary = "Superadmin-only: force reset article back to SUBMITTED regardless of current status")
+    public ResponseEntity<ApiResponse<ArticleResponse>> reset(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok("Article reset to SUBMITTED.", articleService.reset(id)));
+    }
+
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN','JOURNAL_ADMIN','EDITOR')")
     @Operation(summary = "Update article workflow status")
@@ -180,12 +196,9 @@ public class ArticleController {
     @Operation(summary = "List all articles for editorial dashboard (any status)")
     public ResponseEntity<ApiResponse<Page<ArticleResponse>>> adminList(
             @RequestParam(required = false) UUID journalId,
-            @RequestParam(defaultValue = "SUBMITTED") ArticleStatus status,
+            @RequestParam(required = false) ArticleStatus status,
             @PageableDefault(size = 20) Pageable pageable) {
-        if (journalId != null) {
-            return ResponseEntity.ok(ApiResponse.ok(articleService.getByJournal(journalId, status, pageable)));
-        }
-        return ResponseEntity.ok(ApiResponse.ok(articleService.getPublished(pageable)));
+        return ResponseEntity.ok(ApiResponse.ok(articleService.getAdminList(journalId, status, pageable)));
     }
 }
 
