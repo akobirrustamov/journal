@@ -101,7 +101,7 @@ export default function IssueDetail() {
           <ChevronRight size={14} />
           {issue.journalId && (
             <>
-              <Link to={`/journals/${issue.journalSlug || issue.journalId}`} className="hover:text-blue-600">
+              <Link to={issue.journalSlug ? `/journals/${issue.journalSlug}` : "/journals"} className="hover:text-blue-600">
                 {issue.journalTitle}
               </Link>
               <ChevronRight size={14} />

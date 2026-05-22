@@ -1,18 +1,40 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Menu, X, LogOut, User } from "lucide-react";
 import Logo from "../../assets/img/logo.jpg";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const navLinks = [
+  useEffect(() => {
+    setLoggedIn(!!localStorage.getItem("access_token"));
+  }, [location]);
+
+  const publicLinks = [
     { to: "/journals", label: "Jurnallar" },
     { to: "/articles", label: "Maqolalar" },
   ];
 
+  const authLinks = [
+    { to: "/submit",       label: "Maqola yuborish" },
+    { to: "/my-articles",  label: "Mening maqolalarim" },
+    { to: "/my-reviews",   label: "Retsenziyalarim" },
+  ];
+
+  const allLinks = loggedIn ? [...publicLinks, ...authLinks] : publicLinks;
+
   const isActive = (path) => location.pathname.startsWith(path);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    setLoggedIn(false);
+    navigate("/");
+    setMenuOpen(false);
+  };
 
   return (
     <header className="bg-gradient-to-r from-blue-700 to-blue-900 shadow-lg">
@@ -27,8 +49,8 @@ const Header = () => {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden items-center gap-6 md:flex">
-            {navLinks.map((link) => (
+          <nav className="hidden items-center gap-5 md:flex">
+            {allLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -41,12 +63,22 @@ const Header = () => {
                 {link.label}
               </Link>
             ))}
-            <Link
-              to="/admin/login"
-              className="rounded-lg bg-white px-5 py-2 text-sm font-semibold text-blue-700 shadow transition hover:bg-blue-50"
-            >
-              Kirish
-            </Link>
+
+            {loggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+              >
+                <LogOut size={15} /> Chiqish
+              </button>
+            ) : (
+              <Link
+                to="/admin/login"
+                className="flex items-center gap-1.5 rounded-lg bg-white px-5 py-2 text-sm font-semibold text-blue-700 shadow transition hover:bg-blue-50"
+              >
+                <User size={15} /> Kirish
+              </Link>
+            )}
           </nav>
 
           {/* Mobile burger */}
@@ -58,23 +90,34 @@ const Header = () => {
         {/* Mobile menu */}
         {menuOpen && (
           <div className="mt-3 flex flex-col gap-3 border-t border-blue-600 pt-3 md:hidden">
-            {navLinks.map((link) => (
+            {allLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
                 onClick={() => setMenuOpen(false)}
-                className="text-sm font-medium text-blue-100 hover:text-white"
+                className={`text-sm font-medium ${
+                  isActive(link.to) ? "text-white underline underline-offset-4" : "text-blue-100 hover:text-white"
+                }`}
               >
                 {link.label}
               </Link>
             ))}
-            <Link
-              to="/admin/login"
-              onClick={() => setMenuOpen(false)}
-              className="w-fit rounded-lg bg-white px-5 py-2 text-sm font-semibold text-blue-700"
-            >
-              Kirish
-            </Link>
+            {loggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="flex w-fit items-center gap-1.5 rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white"
+              >
+                <LogOut size={15} /> Chiqish
+              </button>
+            ) : (
+              <Link
+                to="/admin/login"
+                onClick={() => setMenuOpen(false)}
+                className="w-fit rounded-lg bg-white px-5 py-2 text-sm font-semibold text-blue-700"
+              >
+                Kirish
+              </Link>
+            )}
           </div>
         )}
       </div>

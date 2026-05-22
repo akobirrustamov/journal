@@ -4,7 +4,18 @@ import ApiCall, { baseUrl } from "../../../config/index";
 import { fileUrl } from "../../../config/fileUrl";
 import { Modal } from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
-import { Trash2, Edit, X, Plus } from "lucide-react";
+import { Trash2, Edit, X, Plus, Users } from "lucide-react";
+
+const emptyBoardForm = {
+  fullName: "",
+  email: "",
+  orcid: "",
+  affiliation: "",
+  country: "",
+  position: "",
+  bio: "",
+  orderIndex: 1,
+};
 
 const Journals = () => {
   // State
@@ -14,6 +25,14 @@ const Journals = () => {
   const [loading, setLoading] = useState(false);
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
+
+  // Board state
+  const [showBoardModal, setShowBoardModal] = useState(false);
+  const [boardJournal, setBoardJournal] = useState(null);
+  const [boardMembers, setBoardMembers] = useState([]);
+  const [boardLoading, setBoardLoading] = useState(false);
+  const [boardForm, setBoardForm] = useState(emptyBoardForm);
+  const [showAddMember, setShowAddMember] = useState(false);
   const [formData, setFormData] = useState({
     id: null,
     coverImageId: "",
@@ -350,6 +369,57 @@ const Journals = () => {
     setCoverPreview(null);
   };
 
+  // ---------- Board functions ----------
+  const openBoardModal = async (journal) => {
+    setBoardJournal(journal);
+    setBoardMembers([]);
+    setBoardForm(emptyBoardForm);
+    setShowAddMember(false);
+    setShowBoardModal(true);
+    setBoardLoading(true);
+    try {
+      const res = await ApiCall(`/api/v1/journals/${journal.id}/board`, "GET");
+      const list = res.data?.data || res.data || [];
+      setBoardMembers(Array.isArray(list) ? list : []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBoardLoading(false);
+    }
+  };
+
+  const addBoardMember = async (e) => {
+    e.preventDefault();
+    setBoardLoading(true);
+    try {
+      const res = await ApiCall(`/api/v1/journals/${boardJournal.id}/board`, "POST", boardForm);
+      if (!res.error) {
+        const updated = await ApiCall(`/api/v1/journals/${boardJournal.id}/board`, "GET");
+        setBoardMembers(Array.isArray(updated.data?.data || updated.data) ? (updated.data?.data || updated.data) : []);
+        setBoardForm(emptyBoardForm);
+        setShowAddMember(false);
+      } else {
+        alert("Xatolik: " + (res.data?.message || "A'zo qo'shilmadi"));
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBoardLoading(false);
+    }
+  };
+
+  const removeBoardMember = async (memberId) => {
+    if (!window.confirm("A'zoni o'chirishni xohlaysizmi?")) return;
+    try {
+      const res = await ApiCall(`/api/v1/journals/board/${memberId}`, "DELETE");
+      if (!res.error) {
+        setBoardMembers((prev) => prev.filter((m) => m.id !== memberId));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const publicationFrequencies = [
     { value: "WEEKLY", label: "Haftalik" },
     { value: "BIWEEKLY", label: "Ikki haftada bir marta" },
@@ -483,6 +553,14 @@ const Journals = () => {
                         {journal.active ? "Faol" : "Nofaol"}
                       </span>
                       <div className="flex gap-2">
+                        <button
+                          onClick={() => openBoardModal(journal)}
+                          className="text-green-600 hover:text-green-900"
+                          aria-label="Redkollegiya"
+                          title="Redkollegiya"
+                        >
+                          <Users size={18} />
+                        </button>
                         <button
                           onClick={() => openEditModal(journal)}
                           className="text-indigo-600 hover:text-indigo-900"
@@ -942,6 +1020,133 @@ const Journals = () => {
               </button>
             </div>
           </form>
+        </div>
+      </Modal>
+
+      {/* Board Modal */}
+      <Modal
+        open={showBoardModal}
+        onClose={() => setShowBoardModal(false)}
+        center
+        styles={{
+          modal: {
+            width: "90%", maxWidth: "700px", borderRadius: "20px",
+            padding: 0, maxHeight: "90vh", overflowY: "auto",
+          },
+          overlay: { backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" },
+        }}
+      >
+        <div className="p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800">
+              Redkollegiya — {boardJournal?.title}
+            </h2>
+            <button onClick={() => setShowBoardModal(false)} className="text-gray-400 hover:text-gray-600">
+              <X size={20} />
+            </button>
+          </div>
+
+          {boardLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600" />
+            </div>
+          ) : (
+            <>
+              {/* Members list */}
+              {boardMembers.length === 0 ? (
+                <p className="mb-4 rounded-lg border border-dashed border-gray-300 py-6 text-center text-sm text-gray-400">
+                  A'zolar yo'q
+                </p>
+              ) : (
+                <div className="mb-4 space-y-2">
+                  {boardMembers.map((m) => (
+                    <div key={m.id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">{m.fullName}</p>
+                        <p className="text-xs text-purple-600">{m.position}</p>
+                        {m.affiliation && <p className="text-xs text-gray-500">{m.affiliation}</p>}
+                        {m.orcid && <p className="text-xs text-green-600">ORCID: {m.orcid}</p>}
+                      </div>
+                      <button
+                        onClick={() => removeBoardMember(m.id)}
+                        className="ml-4 text-red-400 hover:text-red-600"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Toggle add form */}
+              {!showAddMember ? (
+                <button
+                  onClick={() => setShowAddMember(true)}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-purple-300 py-2 text-sm font-medium text-purple-600 hover:border-purple-400 hover:bg-purple-50"
+                >
+                  <Plus size={16} /> A'zo qo'shish
+                </button>
+              ) : (
+                <form onSubmit={addBoardMember} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <h3 className="mb-3 text-sm font-semibold text-gray-700">Yangi a'zo</h3>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <label className="mb-1 block text-xs font-medium text-gray-600">To'liq ism *</label>
+                      <input required type="text" value={boardForm.fullName}
+                        onChange={(e) => setBoardForm((p) => ({ ...p, fullName: e.target.value }))}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Lavozim *</label>
+                      <input required type="text" placeholder="Editor-in-Chief" value={boardForm.position}
+                        onChange={(e) => setBoardForm((p) => ({ ...p, position: e.target.value }))}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Tashkilot</label>
+                      <input type="text" value={boardForm.affiliation}
+                        onChange={(e) => setBoardForm((p) => ({ ...p, affiliation: e.target.value }))}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Email</label>
+                      <input type="email" value={boardForm.email}
+                        onChange={(e) => setBoardForm((p) => ({ ...p, email: e.target.value }))}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">ORCID</label>
+                      <input type="text" placeholder="0000-0001-2345-6789" value={boardForm.orcid}
+                        onChange={(e) => setBoardForm((p) => ({ ...p, orcid: e.target.value }))}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Mamlakat</label>
+                      <input type="text" placeholder="UZ" value={boardForm.country}
+                        onChange={(e) => setBoardForm((p) => ({ ...p, country: e.target.value }))}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">Tartib raqami</label>
+                      <input type="number" min="1" value={boardForm.orderIndex}
+                        onChange={(e) => setBoardForm((p) => ({ ...p, orderIndex: parseInt(e.target.value) }))}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                  </div>
+                  <div className="mt-3 flex justify-end gap-2">
+                    <button type="button" onClick={() => setShowAddMember(false)}
+                      className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                      Bekor
+                    </button>
+                    <button type="submit" disabled={boardLoading}
+                      className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:opacity-50">
+                      {boardLoading ? "Saqlanmoqda..." : "Qo'shish"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </>
+          )}
         </div>
       </Modal>
     </div>

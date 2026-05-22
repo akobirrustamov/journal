@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import ApiCall, { baseUrl } from "../../../config/index";
 import { Modal } from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
-import { Plus, Edit, Upload, X, ChevronDown, ChevronRight, FileText } from "lucide-react";
+import { Plus, Edit, X, ChevronDown, ChevronRight, FileText, Trash2 } from "lucide-react";
+import { ToastContainer, useToast } from "../../../components/ui/Toast";
 
 const emptyForm = {
   id: null,
@@ -17,6 +18,7 @@ const emptyForm = {
 };
 
 export default function IssuesAdmin() {
+  const { toasts, removeToast, success, error: toastError } = useToast();
   const [journals, setJournals] = useState([]);
   const [issuesByJournal, setIssuesByJournal] = useState({});
   const [expandedJournal, setExpandedJournal] = useState(null);
@@ -135,13 +137,13 @@ export default function IssuesAdmin() {
         }
         await refreshIssues(formData.journalId);
         closeModal();
-        alert(isEditing ? "Son yangilandi!" : "Son yaratildi!");
+        success(isEditing ? "Son muvaffaqiyatli yangilandi!" : "Yangi son yaratildi!");
       } else {
-        alert("Xatolik: " + (res.data?.message || "So'rov bajarilmadi"));
+        toastError("Xatolik: " + (res.data?.message || "So'rov bajarilmadi"));
       }
     } catch (err) {
       console.error(err);
-      alert("Xatolik yuz berdi");
+      toastError("Xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
@@ -153,7 +155,7 @@ export default function IssuesAdmin() {
     const token = localStorage.getItem("access_token");
     await fetch(`${baseUrl}/api/v1/issues/${issueId}/cover`, {
       method: "POST",
-      headers: { Authorization: token },
+      headers: { Authorization: `Bearer ${token}` },
       body: fd,
     });
   };
@@ -438,6 +440,7 @@ export default function IssuesAdmin() {
           </form>
         </div>
       </Modal>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

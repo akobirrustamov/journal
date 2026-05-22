@@ -18,6 +18,9 @@ import JournalDetail from "./views/public/journals/JournalDetail";
 import IssueDetail from "./views/public/issues/IssueDetail";
 import ArticlesList from "./views/public/articles/index";
 import ArticleDetail from "./views/public/articles/ArticleDetail";
+import SubmitArticle from "./views/public/submit/index";
+import MyArticles from "./views/public/my-articles/index";
+import ReviewerDashboard from "./views/reviewer/index";
 
 import ErrorPage from "./404/404";
 import IconsAll from "./IconsAll";
@@ -33,6 +36,9 @@ const App = () => {
         <Route path="/issues/:id" element={<IssueDetail />} />
         <Route path="/articles" element={<ArticlesList />} />
         <Route path="/articles/:slug" element={<ArticleDetail />} />
+        <Route path="/submit" element={<SubmitArticle />} />
+        <Route path="/my-articles" element={<MyArticles />} />
+        <Route path="/my-reviews" element={<ReviewerDashboard />} />
 
         {/* Admin dashboards */}
         <Route path="superadmin/*" element={<SuperAdminLayout />} />

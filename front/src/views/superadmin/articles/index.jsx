@@ -259,13 +259,18 @@ const Articles = () => {
   const getArticles = async () => {
     try {
       setLoading(true);
-      let url = `/api/v1/articles/admin/all?page=${currentPage}&size=${pageSize}`;
 
-      if (filters.status !== "ALL") {
-        url += `&status=${filters.status}`;
-      }
-      if (filters.journalId) {
-        url += `&journalId=${filters.journalId}`;
+      let url;
+      if (filters.search) {
+        url = `/api/v1/articles/search?q=${encodeURIComponent(filters.search)}&page=${currentPage}&size=${pageSize}`;
+      } else {
+        url = `/api/v1/articles/admin/all?page=${currentPage}&size=${pageSize}`;
+        if (filters.status !== "ALL") {
+          url += `&status=${filters.status}`;
+        }
+        if (filters.journalId) {
+          url += `&journalId=${filters.journalId}`;
+        }
       }
 
       const result = await ApiCall(url, "GET");
@@ -446,6 +451,8 @@ const Articles = () => {
     }
   };
 
+  
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -604,10 +611,10 @@ const Articles = () => {
                           </div>
                         </td>
                         <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
-                          {article.journal?.title || "-"}
+                          {article.journalTitle || "-"}
                         </td>
                         <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
-                          {article.submittedBy?.name || "-"}
+                          {article.authors?.[0]?.fullName || "-"}
                         </td>
                         <td className="whitespace-nowrap px-6 py-4">
                           {getStatusBadge(article.status)}
@@ -961,7 +968,7 @@ const Articles = () => {
                 <div className="mt-2 flex items-center gap-3">
                   {getStatusBadge(selectedArticle.status)}
                   <span className="text-sm text-gray-500">
-                    {selectedArticle.journal?.title}
+                    {selectedArticle.journalTitle}
                   </span>
                 </div>
               </div>
@@ -1019,7 +1026,7 @@ const Articles = () => {
                           key={idx}
                           className="flex items-center gap-2 text-sm text-gray-600"
                         >
-                          <span className="font-medium">{author.name}</span>
+                          <span className="font-medium">{author.fullName}</span>
                           {author.email && (
                             <span className="text-gray-400">
                               ({author.email})

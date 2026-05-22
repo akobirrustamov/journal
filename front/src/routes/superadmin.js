@@ -4,6 +4,7 @@ import SuperAdminUsers from "views/superadmin/users";
 import SuperAdminJournals from "views/superadmin/journals";
 import SuperAdminArticles from "views/superadmin/articles";
 import SuperAdminIssues from "views/superadmin/issues";
+import SuperAdminReviews from "views/superadmin/reviews";
 
 import {
   MdArticle,
@@ -12,6 +13,7 @@ import {
   MdGroup,
   MdMenuBook,
   MdLibraryBooks,
+  MdRateReview,
 } from "react-icons/md";
 
 const routes = [
@@ -49,6 +51,13 @@ const routes = [
     path: "articles",
     icon: <MdArticle className="h-6 w-6" />,
     component: <SuperAdminArticles />,
+  },
+  {
+    name: "Retsenziyalar",
+    layout: "/superadmin",
+    path: "reviews",
+    icon: <MdRateReview className="h-6 w-6" />,
+    component: <SuperAdminReviews />,
   },
   {
     name: "Profile",
