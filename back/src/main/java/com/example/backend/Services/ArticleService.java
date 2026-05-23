@@ -171,9 +171,11 @@ public class ArticleService {
         Article article = getEntity(articleId);
         ArticleStatus old = article.getStatus();
 
+        if (old == newStatus) return toResponse(article);
         validateTransition(old, newStatus);
         article.setStatus(newStatus);
 
+        article.getAuthors().size(); // initialize lazy collection before async email
         if (newStatus == ArticleStatus.PUBLISHED) {
             article.setPublishedAt(LocalDateTime.now());
             // Generate DOI if not already assigned
