@@ -151,6 +151,20 @@ public class ArticleService {
             authorRepo.saveAll(authors);
         }
 
+        // Replace references
+        referenceRepo.deleteAll(article.getReferences());
+        article.getReferences().clear();
+        if (req.getReferences() != null) {
+            List<Reference> refs = req.getReferences().stream().map(r -> Reference.builder()
+                    .article(article)
+                    .text(r.getText())
+                    .doi(r.getDoi())
+                    .url(r.getUrl())
+                    .orderIndex(r.getOrderIndex())
+                    .build()).collect(Collectors.toList());
+            referenceRepo.saveAll(refs);
+        }
+
         return toResponse(articleRepo.save(article));
     }
 
@@ -318,6 +332,15 @@ public class ArticleService {
                         .orderIndex(au.getOrderIndex())
                         .build()).collect(Collectors.toList());
 
+        List<ArticleResponse.ReferenceSummary> referenceSummaries =
+                a.getReferences() == null ? List.of() :
+                a.getReferences().stream().map(r -> ArticleResponse.ReferenceSummary.builder()
+                        .text(r.getText())
+                        .doi(r.getDoi())
+                        .url(r.getUrl())
+                        .orderIndex(r.getOrderIndex())
+                        .build()).collect(Collectors.toList());
+
         return ArticleResponse.builder()
                 .id(a.getId())
                 .title(a.getTitle())
@@ -335,6 +358,7 @@ public class ArticleService {
                 .pdfUrl(a.getPdfFile() != null ? storageService.resolveUrl(a.getPdfFile()) : null)
                 .hasHtml(a.getHtmlContent() != null && !a.getHtmlContent().isBlank())
                 .authors(authorSummaries)
+                .references(referenceSummaries)
                 .reviewType(a.getReviewType())
                 .pageStart(a.getPageStart())
                 .pageEnd(a.getPageEnd())

@@ -7,6 +7,7 @@ import Header from "../../../components/layout/Header";
 import Footer from "../../../components/layout/Footer";
 
 const emptyAuthor = { fullName: "", email: "", affiliation: "", orcid: "", country: "", corresponding: false, orderIndex: 0 };
+const emptyReference = { text: "", doi: "", url: "", orderIndex: 0 };
 
 export default function SubmitArticle() {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ export default function SubmitArticle() {
     conflictOfInterest: "",
     license: "CC BY 4.0",
     authors: [{ ...emptyAuthor, corresponding: true, orderIndex: 1 }],
-    references: "",
+    references: [],
   });
 
   const isLoggedIn = !!localStorage.getItem("access_token");
@@ -68,6 +69,28 @@ export default function SubmitArticle() {
     }));
   };
 
+  const addReference = () => {
+    setFormData((p) => ({
+      ...p,
+      references: [...p.references, { ...emptyReference, orderIndex: p.references.length + 1 }],
+    }));
+  };
+
+  const updateReference = (idx, field, value) => {
+    setFormData((p) => {
+      const updated = [...p.references];
+      updated[idx] = { ...updated[idx], [field]: value };
+      return { ...p, references: updated };
+    });
+  };
+
+  const removeReference = (idx) => {
+    setFormData((p) => ({
+      ...p,
+      references: p.references.filter((_, i) => i !== idx).map((r, i) => ({ ...r, orderIndex: i + 1 })),
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
@@ -82,12 +105,7 @@ export default function SubmitArticle() {
         .map((k) => k.trim())
         .filter(Boolean);
 
-      const references = formData.references
-        ? formData.references
-            .split("\n")
-            .map((line, i) => ({ text: line.trim(), orderIndex: i + 1 }))
-            .filter((r) => r.text)
-        : [];
+      const references = formData.references.filter((r) => r.text.trim());
 
       const payload = {
         journalId: formData.journalId || null,
@@ -147,7 +165,7 @@ export default function SubmitArticle() {
               Maqolalar
             </Link>
             <button
-              onClick={() => { setSubmitted(false); setFormData({ journalId: "", title: "", abstractText: "", keywords: "", reviewType: "DOUBLE_BLIND", language: "uz", fundingInfo: "", conflictOfInterest: "", license: "CC BY 4.0", authors: [{ ...emptyAuthor, corresponding: true, orderIndex: 1 }], references: "" }); setPdfFile(null); }}
+              onClick={() => { setSubmitted(false); setFormData({ journalId: "", title: "", abstractText: "", keywords: "", reviewType: "DOUBLE_BLIND", language: "uz", fundingInfo: "", conflictOfInterest: "", license: "CC BY 4.0", authors: [{ ...emptyAuthor, corresponding: true, orderIndex: 1 }], references: [] }); setPdfFile(null); }}
               className="rounded-lg border border-gray-300 px-6 py-2 font-medium text-gray-700 hover:bg-gray-50"
             >
               Yana yuborish
@@ -336,16 +354,54 @@ export default function SubmitArticle() {
 
           {/* References */}
           <section className="rounded-xl bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-base font-semibold text-gray-800">Adabiyotlar ro'yxati (ixtiyoriy)</h2>
-            <p className="mb-2 text-xs text-gray-400">Har bir adabiyotni yangi qatordan kiriting</p>
-            <textarea
-              name="references"
-              value={formData.references}
-              onChange={handleChange}
-              rows={6}
-              placeholder={"Dirac, P.A.M. (1930). The Principles of Quantum Mechanics.\nEinstein, A. (1905). On the Electrodynamics of Moving Bodies."}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-gray-800">Adabiyotlar ro'yxati (ixtiyoriy)</h2>
+              <button type="button" onClick={addReference}
+                className="flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100">
+                <Plus size={14} /> Adabiyot qo'shish
+              </button>
+            </div>
+            {formData.references.length === 0 && (
+              <p className="text-sm text-gray-400">Adabiyot qo'shish uchun yuqoridagi tugmani bosing.</p>
+            )}
+            <div className="space-y-3">
+              {formData.references.map((ref, idx) => (
+                <div key={idx} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-gray-500">{idx + 1}-adabiyot</span>
+                    <button type="button" onClick={() => removeReference(idx)} className="text-red-400 hover:text-red-600">
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    <textarea
+                      rows={2}
+                      placeholder="To'liq bibliografik ma'lumot *"
+                      required
+                      value={ref.text}
+                      onChange={(e) => updateReference(idx, "text", e.target.value)}
+                      className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <input
+                        type="text"
+                        placeholder="DOI (ixtiyoriy)"
+                        value={ref.doi}
+                        onChange={(e) => updateReference(idx, "doi", e.target.value)}
+                        className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      <input
+                        type="url"
+                        placeholder="URL (ixtiyoriy)"
+                        value={ref.url}
+                        onChange={(e) => updateReference(idx, "url", e.target.value)}
+                        className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </section>
 
           {/* Additional */}

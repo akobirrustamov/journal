@@ -61,6 +61,7 @@ const Articles = () => {
     pageEnd: "",
     receivedDate: "",
     authors: [],
+    references: [],
   });
 
   // ─────────────────────────────────────────────
@@ -87,6 +88,7 @@ const Articles = () => {
       pageEnd: "",
       receivedDate: "",
       authors: [],
+      references: [],
     });
 
     setShowCreateModal(true);
@@ -114,6 +116,7 @@ const Articles = () => {
       pageEnd: article.pageEnd || "",
       receivedDate: article.receivedDate ? article.receivedDate.split("T")[0] : "",
       authors: article.authors || [],
+      references: article.references || [],
     });
 
     setShowCreateModal(true);
@@ -156,6 +159,28 @@ const Articles = () => {
     }));
   };
 
+  const addReference = () => {
+    setFormData((prev) => ({
+      ...prev,
+      references: [...prev.references, { text: "", doi: "", url: "", orderIndex: prev.references.length + 1 }],
+    }));
+  };
+
+  const updateReference = (index, field, value) => {
+    setFormData((prev) => {
+      const updated = [...prev.references];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, references: updated };
+    });
+  };
+
+  const removeReference = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      references: prev.references.filter((_, i) => i !== index).map((r, i) => ({ ...r, orderIndex: i + 1 })),
+    }));
+  };
+
   // ─────────────────────────────────────────────
   // CREATE / UPDATE
   // ─────────────────────────────────────────────
@@ -180,6 +205,7 @@ const Articles = () => {
         pageEnd: formData.pageEnd ? parseInt(formData.pageEnd) : null,
         receivedDate: formData.receivedDate || null,
         authors: formData.authors,
+        references: formData.references.filter((r) => r.text.trim()),
       };
 
       let result;
@@ -903,6 +929,68 @@ const Articles = () => {
               )}
             </div>
 
+            {/* REFERENCES */}
+            <div className="md:col-span-2">
+              <div className="mb-2 flex items-center justify-between">
+                <label className="text-sm font-medium">Adabiyotlar</label>
+                <button
+                  type="button"
+                  onClick={addReference}
+                  className="flex items-center gap-1 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-100"
+                >
+                  <Plus size={14} /> Adabiyot qo'shish
+                </button>
+              </div>
+              {formData.references.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-gray-300 py-4 text-center text-sm text-gray-400">
+                  Adabiyot qo'shilmagan
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {formData.references.map((ref, idx) => (
+                    <div key={idx} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-500">{idx + 1}-adabiyot</span>
+                        <button
+                          type="button"
+                          onClick={() => removeReference(idx)}
+                          className="text-red-400 hover:text-red-600"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        <textarea
+                          rows={2}
+                          placeholder="To'liq bibliografik ma'lumot *"
+                          required
+                          value={ref.text}
+                          onChange={(e) => updateReference(idx, "text", e.target.value)}
+                          className="w-full rounded border px-3 py-2 text-sm"
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            placeholder="DOI (ixtiyoriy)"
+                            value={ref.doi}
+                            onChange={(e) => updateReference(idx, "doi", e.target.value)}
+                            className="rounded border px-3 py-2 text-sm"
+                          />
+                          <input
+                            type="url"
+                            placeholder="URL (ixtiyoriy)"
+                            value={ref.url}
+                            onChange={(e) => updateReference(idx, "url", e.target.value)}
+                            className="rounded border px-3 py-2 text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* PDF */}
             <div className="md:col-span-2">
               <label className="mb-1 block text-sm font-medium">PDF fayl</label>
@@ -1040,6 +1128,32 @@ const Articles = () => {
                     </div>
                   </div>
                 )}
+
+              {/* References */}
+              {selectedArticle.references && selectedArticle.references.length > 0 && (
+                <div>
+                  <h3 className="mb-2 font-semibold text-gray-700">Adabiyotlar</h3>
+                  <ol className="space-y-2">
+                    {selectedArticle.references.map((ref, idx) => (
+                      <li key={idx} className="flex gap-2 text-sm text-gray-600">
+                        <span className="shrink-0 font-medium text-gray-400">{ref.orderIndex || idx + 1}.</span>
+                        <span>
+                          {ref.text}
+                          {ref.doi && (
+                            <span className="ml-2 text-indigo-600">DOI: {ref.doi}</span>
+                          )}
+                          {ref.url && (
+                            <a href={ref.url} target="_blank" rel="noopener noreferrer"
+                              className="ml-2 text-indigo-500 underline">
+                              URL
+                            </a>
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
 
               {/* Metadata */}
               <div className="grid grid-cols-2 gap-4 rounded-lg bg-gray-50 p-4">

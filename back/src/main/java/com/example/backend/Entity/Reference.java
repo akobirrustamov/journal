@@ -7,7 +7,7 @@ import java.util.UUID;
 
 /** A bibliographic reference cited within a scientific article. */
 @Entity
-@Table(name = "references")
+@Table(name = "article_references")
 @Data
 @Builder
 @NoArgsConstructor

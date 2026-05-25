@@ -37,6 +37,9 @@ public class ArticleResponse {
     // Authors
     private List<AuthorSummary> authors;
 
+    // References
+    private List<ReferenceSummary> references;
+
     // Review info
     private ReviewType reviewType;
 
@@ -69,6 +72,15 @@ public class ArticleResponse {
         private String orcid;
         private String affiliation;
         private boolean corresponding;
+        private int orderIndex;
+    }
+
+    @Data
+    @Builder
+    public static class ReferenceSummary {
+        private String text;
+        private String doi;
+        private String url;
         private int orderIndex;
     }
 }
