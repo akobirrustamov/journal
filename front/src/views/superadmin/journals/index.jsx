@@ -5,6 +5,7 @@ import { fileUrl } from "../../../config/fileUrl";
 import { Modal } from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
 import { Trash2, Edit, X, Plus, Users } from "lucide-react";
+import { ToastContainer, useToast } from "../../../components/ui/Toast";
 
 const emptyBoardForm = {
   fullName: "",
@@ -18,6 +19,7 @@ const emptyBoardForm = {
 };
 
 const Journals = () => {
+  const { toasts, removeToast, success, error: toastError } = useToast();
   // State
   const [journals, setJournals] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -38,6 +40,7 @@ const Journals = () => {
     coverImageId: "",
     title: "",
     titleAbbr: "",
+    slug: "",
     issnPrint: "",
     issnOnline: "",
     isbn: "",
@@ -126,12 +129,11 @@ const Journals = () => {
       }
 
       await getJournals();
-
       closeModal();
-
-      alert("Yangilandi");
+      success("Jurnal muvaffaqiyatli yangilandi!");
     } catch (error) {
       console.error(error);
+      toastError("Jurnalni yangilashda xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
@@ -143,11 +145,13 @@ const Journals = () => {
         const result = await ApiCall(`/api/v1/journals/${id}`, "DELETE");
         if (!result.error) {
           await getJournals();
-          alert("Jurnal muvaffaqiyatli o'chirildi!");
+          success("Jurnal muvaffaqiyatli o'chirildi!");
+        } else {
+          toastError("Xatolik: " + (result.data?.message || "O'chirilmadi"));
         }
       } catch (error) {
         console.error("O'chirishda xatolik", error);
-        alert("Jurnalni o'chirishda xatolik yuz berdi");
+        toastError("Jurnalni o'chirishda xatolik yuz berdi");
       }
     }
   };
@@ -170,8 +174,7 @@ const Journals = () => {
       );
     } catch (error) {
       console.error(error);
-
-      alert("Rasm yuklanmadi");
+      toastError("Muqova rasmi yuklanmadi");
     }
   };
 
@@ -207,6 +210,7 @@ const Journals = () => {
     const payload = {
       title: formData.title,
       titleAbbr: formData.titleAbbr,
+      slug: formData.slug || undefined,
       issnPrint: formData.issnPrint,
       issnOnline: formData.issnOnline,
       isbn: formData.isbn,
@@ -281,6 +285,7 @@ const Journals = () => {
       id: journal.id,
       title: journal.title || "",
       titleAbbr: journal.titleAbbr || "",
+      slug: journal.slug || "",
       issnPrint: journal.issnPrint || "",
       issnOnline: journal.issnOnline || "",
       isbn: journal.isbn || "",
@@ -313,6 +318,7 @@ const Journals = () => {
       coverImageId: "",
       title: "",
       titleAbbr: "",
+      slug: "",
       issnPrint: "",
       issnOnline: "",
       isbn: "",
@@ -344,6 +350,7 @@ const Journals = () => {
       coverImageId: "",
       title: "",
       titleAbbr: "",
+      slug: "",
       issnPrint: "",
       issnOnline: "",
       isbn: "",
@@ -395,11 +402,13 @@ const Journals = () => {
       const res = await ApiCall(`/api/v1/journals/${boardJournal.id}/board`, "POST", boardForm);
       if (!res.error) {
         const updated = await ApiCall(`/api/v1/journals/${boardJournal.id}/board`, "GET");
-        setBoardMembers(Array.isArray(updated.data?.data || updated.data) ? (updated.data?.data || updated.data) : []);
+        const list = updated.data?.data || updated.data;
+        setBoardMembers(Array.isArray(list) ? list : []);
         setBoardForm(emptyBoardForm);
         setShowAddMember(false);
+        success("A'zo muvaffaqiyatli qo'shildi!");
       } else {
-        alert("Xatolik: " + (res.data?.message || "A'zo qo'shilmadi"));
+        toastError("Xatolik: " + (res.data?.message || "A'zo qo'shilmadi"));
       }
     } catch (e) {
       console.error(e);
@@ -653,6 +662,20 @@ const Journals = () => {
                     onChange={handleInputChange}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     placeholder="J. Sci. Res."
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Slug <span className="text-xs font-normal text-gray-400">(URL uchun, ixtiyoriy — bo'sh qoldirilsa avtomatik yaratiladi)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="slug"
+                    value={formData.slug}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    placeholder="ilmiy-jurnal-nomi"
                   />
                 </div>
 
@@ -1149,6 +1172,7 @@ const Journals = () => {
           )}
         </div>
       </Modal>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };

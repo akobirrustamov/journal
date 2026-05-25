@@ -11,6 +11,7 @@ const ProfileOverview = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
   const [changePassword, setChangePassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -24,7 +25,7 @@ const ProfileOverview = () => {
       const response = await ApiCall("/api/v1/auth/decode", "GET", null);
       setAdmin(response.data);
     } catch (error) {
-      navigate("/admin/login");
+      navigate("/login");
       console.error("Error fetching account data:", error);
     }
   };
@@ -65,9 +66,7 @@ const ProfileOverview = () => {
       setPassword("");
       setConfirmPassword("");
       setPasswordError("");
-
-      // Muvaffaqiyatli bildirishnoma
-      alert("Parol muvaffaqiyatli yangilandi!");
+      setPasswordSuccess("Parol muvaffaqiyatli yangilandi!");
     } catch (error) {
       console.error("Error updating password:", error);
       setPasswordError("Parolni yangilashda xatolik yuz berdi");
@@ -186,6 +185,13 @@ const ProfileOverview = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Success Message */}
+              {passwordSuccess && (
+                <div className="rounded-lg border border-green-100 bg-green-50 p-3">
+                  <p className="text-sm text-green-700">{passwordSuccess}</p>
+                </div>
+              )}
 
               {/* Error Message */}
               {passwordError && (

@@ -246,12 +246,14 @@ export default function ReviewsAdmin() {
                 onChange={(e) => setAssignForm((p) => ({ ...p, reviewerId: e.target.value }))}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="">Foydalanuvchini tanlang</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} — {u.email || u.phone}
-                  </option>
-                ))}
+                <option value="">Retsenzentni tanlang</option>
+                {users
+                  .filter((u) => u.roles?.some((r) => r.name === "ROLE_REVIEWER"))
+                  .map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} — {u.email || u.phone}
+                    </option>
+                  ))}
               </select>
             </div>
             <div>

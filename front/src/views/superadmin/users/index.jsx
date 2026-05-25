@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import ApiCall from "../../../config/index"; // Adjust import path if needed
+import ApiCall from "../../../config/index";
 import { Modal } from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
-import { Trash2, Edit, X, Plus } from "lucide-react"; // Optional icons, you can use any icon lib
+import { Trash2, Edit, X, Plus } from "lucide-react";
+import { ToastContainer, useToast } from "../../../components/ui/Toast";
 
 const Dashboard = () => {
+  const { toasts, removeToast, success, error: toastError } = useToast();
   // State
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
@@ -34,7 +36,11 @@ const Dashboard = () => {
   const getUsers = async () => {
     try {
       const result = await ApiCall("/api/v1/admin/users", "GET");
-      setUsers(result.data);
+      if (!result.error) {
+        const raw = result.data?.data || result.data;
+        const list = raw?.content || raw;
+        setUsers(Array.isArray(list) ? list : []);
+      }
     } catch (error) {
       console.error("Foydalanuvchilarni olishda xatolik", error);
     }
@@ -43,7 +49,10 @@ const Dashboard = () => {
   const getRoles = async () => {
     try {
       const result = await ApiCall("/api/v1/roles", "GET");
-      setRoles(result.data);
+      if (!result.error) {
+        const list = result.data?.data || result.data;
+        setRoles(Array.isArray(list) ? list : []);
+      }
     } catch (error) {
       console.error("Rolllarni olishda xatolik", error);
     }
@@ -51,9 +60,14 @@ const Dashboard = () => {
 
   const createUser = async (userData) => {
     try {
-      await ApiCall("/api/v1/admin/users", "POST", userData);
-      await getUsers(); // refresh list
-      closeModal();
+      const result = await ApiCall("/api/v1/admin/users", "POST", userData);
+      if (!result.error) {
+        await getUsers();
+        closeModal();
+        success("Foydalanuvchi yaratildi!");
+      } else {
+        toastError("Xatolik: " + (result.data?.message || "Foydalanuvchi yaratilmadi"));
+      }
     } catch (error) {
       console.error("Yaratishda xatolik", error);
     }
@@ -61,9 +75,14 @@ const Dashboard = () => {
 
   const updateUser = async (id, userData) => {
     try {
-      await ApiCall(`/api/v1/admin/users/${id}`, "PUT", userData);
-      await getUsers();
-      closeModal();
+      const result = await ApiCall(`/api/v1/admin/users/${id}`, "PUT", userData);
+      if (!result.error) {
+        await getUsers();
+        closeModal();
+        success("Foydalanuvchi yangilandi!");
+      } else {
+        toastError("Xatolik: " + (result.data?.message || "Yangilanmadi"));
+      }
     } catch (error) {
       console.error("Yangilashda xatolik", error);
     }
@@ -72,8 +91,10 @@ const Dashboard = () => {
   const deleteUser = async (id) => {
     if (window.confirm("Ushbu foydalanuvchini o'chirishni xohlaysizmi?")) {
       try {
-        await ApiCall(`/api/v1/admin/users/${id}`, "DELETE");
-        await getUsers();
+        const result = await ApiCall(`/api/v1/admin/users/${id}`, "DELETE");
+        if (!result.error) {
+          await getUsers();
+        }
       } catch (error) {
         console.error("O'chirishda xatolik", error);
       }
@@ -102,29 +123,30 @@ const Dashboard = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    try {
+      const payload = {
+        phone: formData.phone,
+        password: formData.password,
+        name: formData.name,
+        email: formData.email,
+        orcid: formData.orcid,
+        affiliation: formData.affiliation,
+        country: formData.country,
+        bio: formData.bio,
+        roleIds: formData.roleIds,
+      };
 
-    // Prepare payload (exclude id for create)
-    const payload = {
-      phone: formData.phone,
-      password: formData.password,
-      name: formData.name,
-      email: formData.email,
-      orcid: formData.orcid,
-      affiliation: formData.affiliation,
-      country: formData.country,
-      bio: formData.bio,
-      roleIds: formData.roleIds,
-    };
-
-    if (isEditing && formData.id) {
-      updateUser(formData.id, payload);
-    } else {
-      createUser(payload);
+      if (isEditing && formData.id) {
+        await updateUser(formData.id, payload);
+      } else {
+        await createUser(payload);
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const openEditModal = (user) => {
@@ -498,6 +520,7 @@ const Dashboard = () => {
           </form>
         </div>
       </Modal>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };

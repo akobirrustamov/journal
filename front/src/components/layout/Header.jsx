@@ -22,6 +22,7 @@ const Header = () => {
     { to: "/submit",       label: "Maqola yuborish" },
     { to: "/my-articles",  label: "Mening maqolalarim" },
     { to: "/my-reviews",   label: "Retsenziyalarim" },
+    { to: "/profile",      label: "Profilim" },
   ];
 
   const allLinks = loggedIn ? [...publicLinks, ...authLinks] : publicLinks;
@@ -73,7 +74,7 @@ const Header = () => {
               </button>
             ) : (
               <Link
-                to="/admin/login"
+                to="/login"
                 className="flex items-center gap-1.5 rounded-lg bg-white px-5 py-2 text-sm font-semibold text-blue-700 shadow transition hover:bg-blue-50"
               >
                 <User size={15} /> Kirish
@@ -111,7 +112,7 @@ const Header = () => {
               </button>
             ) : (
               <Link
-                to="/admin/login"
+                to="/login"
                 onClick={() => setMenuOpen(false)}
                 className="w-fit rounded-lg bg-white px-5 py-2 text-sm font-semibold text-blue-700"
               >

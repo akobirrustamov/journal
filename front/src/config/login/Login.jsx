@@ -61,28 +61,16 @@ export default function Auth() {
         } else {
           active_role = response.data?.activeRole.name;
         }
-        if (active_role === "ROLE_ADMIN") navigate("/admin");
-        else if (active_role === "ROLE_SUPERADMIN") {
+        if (active_role === "ROLE_SUPERADMIN" || active_role === "ROLE_ADMIN") {
           navigate("/superadmin/default");
-        } else if (active_role === "ROLE_ADMIN") {
-          navigate("/admin/default");
-        } else if (active_role === "ROLE_STUDENT") {
-          navigate("/student/default");
-        } else if (active_role === "ROLE_REKTOR") {
-          navigate("/rektor/default");
-        } else if (active_role === "ROLE_ILMIY_BOLIM") {
-          navigate("/ilmiy-bolim/default");
-          // } else if (active_role === "ROLE_USER") {
-          //   navigate("/user/default");
-        } else if (active_role === "ROLE_ILMIY_RAHBAR") {
-
-          navigate("/ilmiy-rahbar/default");
-        } else if (active_role === "ROLE_ILMIY_TEXNIK") {
-          navigate("/ilmiy-texnik/default");
-        } else if (active_role === "ROLE_BUGALTER") {
-          navigate("/bugalter/default");
-          // } else if (active_role === "ROLE_OFFICE") {
-          //   navigate("/office/default");
+        } else if (active_role === "ROLE_JOURNAL_ADMIN") {
+          navigate("/journal-admin/default");
+        } else if (active_role === "ROLE_EDITOR") {
+          navigate("/editor/default");
+        } else if (active_role === "ROLE_REVIEWER") {
+          navigate("/my-reviews");
+        } else {
+          navigate("/my-articles");
         }
 
       } else {

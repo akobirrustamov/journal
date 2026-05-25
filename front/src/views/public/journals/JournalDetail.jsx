@@ -31,8 +31,13 @@ export default function JournalDetail() {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await ApiCall(`/api/v1/journals/${slug}`, "GET");
-        const j = res.data?.data || res.data;
+        // Try by slug first; if not found, fall back to ID lookup
+        let res = await ApiCall(`/api/v1/journals/${slug}`, "GET");
+        let j = res.data?.data || res.data;
+        if (res.error || !j?.id) {
+          res = await ApiCall(`/api/v1/journals/id/${slug}`, "GET");
+          j = res.data?.data || res.data;
+        }
         setJournal(j);
         if (j?.id) {
           const [issuesRes, boardRes] = await Promise.all([

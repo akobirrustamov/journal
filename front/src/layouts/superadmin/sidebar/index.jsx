@@ -85,6 +85,9 @@ const Sidebar = ({ open, onClose }) => {
           <span className="text-base font-semibold tracking-tight text-gray-800 dark:text-white">
             ILMIY.BXU.UZ
           </span>
+          <div className="mt-2 inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-700">
+            SUPERADMIN
+          </div>
         </div>
 
         {/* Navigation */}

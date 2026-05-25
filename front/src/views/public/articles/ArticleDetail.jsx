@@ -155,7 +155,7 @@ export default function ArticleDetail() {
           <ChevronRight size={14} />
           {article.journalTitle && (
             <>
-              <Link to={`/journals/${article.journalSlug}`} className="hover:text-blue-600">
+              <Link to={`/journals/${article.journalSlug || article.journalId}`} className="hover:text-blue-600">
                 {article.journalTitle}
               </Link>
               <ChevronRight size={14} />
@@ -173,7 +173,7 @@ export default function ArticleDetail() {
             <div className="rounded-xl bg-white p-6 shadow-sm">
               {article.journalTitle && (
                 <p className="mb-2 text-sm font-medium text-blue-600">
-                  <Link to={`/journals/${article.journalSlug}`} className="hover:underline">
+                  <Link to={`/journals/${article.journalSlug || article.journalId}`} className="hover:underline">
                     {article.journalTitle}
                   </Link>
                   {article.volumeNumber && (

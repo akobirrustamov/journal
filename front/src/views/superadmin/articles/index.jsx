@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import ApiCall from "../../../config/index";
+import ApiCall, { baseUrl } from "../../../config/index";
 import { Modal } from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
 import {
@@ -17,8 +17,10 @@ import {
   Plus,
   Upload,
 } from "lucide-react";
+import { ToastContainer, useToast } from "../../../components/ui/Toast";
 
 const Articles = () => {
+  const { toasts, removeToast, success, error: toastError } = useToast();
   // State
   const [articles, setArticles] = useState([]);
   const [journals, setJournals] = useState([]);
@@ -191,8 +193,7 @@ const Articles = () => {
       }
 
       if (result.error) {
-        alert("Xatolik yuz berdi");
-
+        toastError("Xatolik: " + (result.data?.message || "Maqola saqlanmadi"));
         return;
       }
 
@@ -206,22 +207,19 @@ const Articles = () => {
 
         const token = localStorage.getItem("access_token");
 
-        await fetch(`/api/v1/articles/${article.id}/pdf`, {
+        await fetch(`${baseUrl}/api/v1/articles/${article.id}/pdf`, {
           method: "POST",
-
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-
+          headers: { Authorization: `Bearer ${token}` },
           body: uploadData,
         });
       }
 
       await getArticles();
-
       setShowCreateModal(false);
+      success(isEditing ? "Maqola yangilandi!" : "Yangi maqola yaratildi!");
     } catch (error) {
       console.error(error);
+      toastError("Xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
@@ -241,8 +239,9 @@ const Articles = () => {
 
       if (!result.error) {
         await getArticles();
-
-        alert("O‘chirildi");
+        success("Maqola o’chirildi");
+      } else {
+        toastError("Xatolik: " + (result.data?.message || "O’chirilmadi"));
       }
     } catch (error) {
       console.error(error);
@@ -315,15 +314,14 @@ const Articles = () => {
       );
       if (!result.error) {
         await getArticles();
-        alert("Maqola holati muvaffaqiyatli yangilandi!");
+        setSelectedArticle((prev) => prev ? { ...prev, status: newStatus } : prev);
+        success("Maqola holati yangilandi!");
       } else {
-        alert(
-          "Xatolik: " + (result.data?.message || "Holatni yangilashda xatolik")
-        );
+        toastError("Xatolik: " + (result.data?.message || "Holatni yangilashda xatolik"));
       }
     } catch (error) {
       console.error("Holatni yangilashda xatolik", error);
-      alert("Maqola holatini yangilashda xatolik yuz berdi");
+      toastError("Maqola holatini yangilashda xatolik yuz berdi");
     }
   };
 
@@ -355,9 +353,9 @@ const Articles = () => {
     if (!res.error) {
       await getArticles();
       setSelectedArticle((prev) => ({ ...prev, status: "SUBMITTED" }));
-      alert("Maqola holati SUBMITTED ga qaytarildi!");
+      success("Maqola holati SUBMITTED ga qaytarildi!");
     } else {
-      alert("Xatolik: " + (res.data?.message || "Qayta o'rnatib bo'lmadi"));
+      toastError("Xatolik: " + (res.data?.message || "Qayta o'rnatib bo'lmadi"));
     }
   };
 
@@ -368,11 +366,11 @@ const Articles = () => {
       "PUT"
     );
     if (!res.error) {
-      alert("Maqola songa biriktirildi!");
+      success("Maqola songa biriktirildi!");
       await getArticles();
       closeModal();
     } else {
-      alert("Xatolik: " + (res.data?.message || "Biriktirish amalga oshmadi"));
+      toastError("Xatolik: " + (res.data?.message || "Biriktirish amalga oshmadi"));
     }
   };
 
@@ -1158,10 +1156,10 @@ const Articles = () => {
               )}
 
               {/* PDF Download */}
-              {selectedArticle.pdfFile && (
+              {selectedArticle.pdfUrl && (
                 <div className="flex justify-end">
                   <a
-                    href={`/api/v1/articles/${selectedArticle.id}/download`}
+                    href={`${baseUrl}/api/v1/articles/${selectedArticle.id}/download`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-white transition hover:bg-indigo-700"
@@ -1175,6 +1173,7 @@ const Articles = () => {
           </div>
         )}
       </Modal>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 };

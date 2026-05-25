@@ -114,11 +114,11 @@ export default function IssuesAdmin() {
         journalId: formData.journalId,
         volumeNumber: parseInt(formData.volumeNumber),
         issueNumber: parseInt(formData.issueNumber),
-        title: formData.title,
-        description: formData.description,
+        title: formData.title || null,
+        description: formData.description || null,
         publishedDate: formData.publishedDate || null,
         current: formData.current,
-        doi: formData.doi,
+        doi: formData.doi || null,
       };
 
       let res;

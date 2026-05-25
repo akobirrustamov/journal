@@ -120,7 +120,7 @@ export default function JournalsList() {
               {journals.map((journal) => (
                 <Link
                   key={journal.id}
-                  to={`/journals/${journal.slug}`}
+                  to={`/journals/${journal.slug || journal.id}`}
                   className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md"
                 >
                   {/* Cover */}

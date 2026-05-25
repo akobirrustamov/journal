@@ -149,7 +149,7 @@ export default function Home() {
               </div>
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {journals.map((journal) => (
-                  <Link key={journal.id} to={`/journals/${journal.slug}`}
+                  <Link key={journal.id} to={`/journals/${journal.slug || journal.id}`}
                     className="group flex overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md">
                     <div className="relative h-full w-24 flex-shrink-0 bg-gradient-to-b from-blue-500 to-indigo-600">
                       {journal.coverImageUrl ? (

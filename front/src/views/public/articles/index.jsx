@@ -137,7 +137,7 @@ export default function ArticlesList() {
                       {/* Journal + Issue */}
                       {article.journalTitle && (
                         <p className="mb-1 text-xs text-blue-600">
-                          <Link to={`/journals/${article.journalSlug}`} className="hover:underline">
+                          <Link to={`/journals/${article.journalSlug || article.journalId}`} className="hover:underline">
                             {article.journalTitle}
                           </Link>
                           {article.volumeNumber && (

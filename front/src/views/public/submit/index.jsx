@@ -14,6 +14,7 @@ export default function SubmitArticle() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [pdfFile, setPdfFile] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
   const [formData, setFormData] = useState({
     journalId: "",
     title: "",
@@ -70,9 +71,10 @@ export default function SubmitArticle() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
-      alert("Iltimos, avval tizimga kiring");
+      navigate("/login");
       return;
     }
+    setErrorMsg("");
     setLoading(true);
     try {
       const keywords = formData.keywords
@@ -104,7 +106,7 @@ export default function SubmitArticle() {
       const res = await ApiCall("/api/v1/articles/submit", "POST", payload);
 
       if (res.error) {
-        alert("Xatolik: " + (res.data?.message || "Maqola yuborilmadi"));
+        setErrorMsg("Xatolik: " + (res.data?.message || "Maqola yuborilmadi"));
         return;
       }
 
@@ -124,7 +126,7 @@ export default function SubmitArticle() {
       setSubmitted(true);
     } catch (err) {
       console.error(err);
-      alert("Xatolik yuz berdi");
+      setErrorMsg("Server bilan bog'lanishda xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
@@ -176,7 +178,7 @@ export default function SubmitArticle() {
         {!isLoggedIn && (
           <div className="mb-6 rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
             Maqola yuborish uchun{" "}
-            <a href="/admin/login" className="font-semibold underline">tizimga kiring</a>.
+            <a href="/login" className="font-semibold underline">tizimga kiring</a>.
           </div>
         )}
 
@@ -369,6 +371,12 @@ export default function SubmitArticle() {
               </div>
             </div>
           </section>
+
+          {errorMsg && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMsg}
+            </div>
+          )}
 
           <button
             type="submit"

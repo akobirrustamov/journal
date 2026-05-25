@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { FileText, Clock, CheckCircle, XCircle, Download, Eye, ChevronDown, ChevronUp } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, Download, Eye, ChevronDown, ChevronUp, Upload, X } from "lucide-react";
 import ApiCall, { baseUrl } from "../../../config/index";
 import Header from "../../../components/layout/Header";
 import Footer from "../../../components/layout/Footer";
@@ -25,11 +25,16 @@ export default function MyArticles() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
+  const [revisionArticle, setRevisionArticle] = useState(null);
+  const [revisionFile, setRevisionFile] = useState(null);
+  const [revisionLoading, setRevisionLoading] = useState(false);
+  const [revisionMsg, setRevisionMsg] = useState({ type: "", text: "" });
+  const revisionInputRef = useRef(null);
 
   const isLoggedIn = !!localStorage.getItem("access_token");
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) { setLoading(false); return; }
     ApiCall("/api/v1/articles/my", "GET").then((res) => {
       if (!res.error) {
         const raw = res.data?.data || res.data;
@@ -38,6 +43,55 @@ export default function MyArticles() {
       }
     }).finally(() => setLoading(false));
   }, []);
+
+  const loadArticles = () => {
+    ApiCall("/api/v1/articles/my", "GET").then((res) => {
+      if (!res.error) {
+        const raw = res.data?.data || res.data;
+        const list = raw?.content || raw;
+        setArticles(Array.isArray(list) ? list : []);
+      }
+    });
+  };
+
+  const handleRevisionSubmit = async () => {
+    if (!revisionFile) {
+      setRevisionMsg({ type: "error", text: "Iltimos, PDF faylni tanlang." });
+      return;
+    }
+    setRevisionLoading(true);
+    setRevisionMsg({ type: "", text: "" });
+    try {
+      const formData = new FormData();
+      formData.append("file", revisionFile);
+      const token = localStorage.getItem("access_token");
+      const uploadRes = await fetch(`${baseUrl}/api/v1/articles/${revisionArticle.id}/pdf`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!uploadRes.ok) {
+        const err = await uploadRes.json().catch(() => ({}));
+        throw new Error(err.message || "PDF yuklashda xatolik");
+      }
+      const statusRes = await ApiCall(
+        `/api/v1/articles/${revisionArticle.id}/status?status=SUBMITTED`,
+        "PUT"
+      );
+      if (statusRes.error) throw new Error("Holat yangilashda xatolik");
+      setRevisionMsg({ type: "success", text: "Yangi versiya muvaffaqiyatli yuborildi!" });
+      loadArticles();
+      setTimeout(() => {
+        setRevisionArticle(null);
+        setRevisionFile(null);
+        setRevisionMsg({ type: "", text: "" });
+      }, 1800);
+    } catch (e) {
+      setRevisionMsg({ type: "error", text: e.message || "Xatolik yuz berdi" });
+    } finally {
+      setRevisionLoading(false);
+    }
+  };
 
   const progressStep = (status) => {
     const idx = STATUS_TIMELINE.indexOf(status);
@@ -63,7 +117,7 @@ export default function MyArticles() {
           <div className="rounded-xl bg-white p-10 text-center shadow-sm">
             <FileText className="mx-auto mb-4 h-12 w-12 text-gray-300" />
             <p className="mb-4 text-gray-600">Maqolalaringizni ko'rish uchun tizimga kiring.</p>
-            <a href="/admin/login"
+            <a href="/login"
               className="rounded-lg bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700">
               Kirish
             </a>
@@ -176,8 +230,14 @@ export default function MyArticles() {
                     )}
 
                     {article.status === "REVISION_REQUIRED" && (
-                      <div className="mt-3 rounded-lg bg-orange-50 px-4 py-2 text-sm text-orange-700">
-                        Tuzatishlar talab qilinmoqda. Yangilangan versiyani yuboring.
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-orange-50 px-4 py-3">
+                        <p className="text-sm text-orange-700">Tuzatishlar talab qilinmoqda. Yangilangan versiyani yuboring.</p>
+                        <button
+                          onClick={() => { setRevisionArticle(article); setRevisionFile(null); setRevisionMsg({ type: "", text: "" }); }}
+                          className="flex items-center gap-1.5 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-orange-600"
+                        >
+                          <Upload size={13} /> Yangi versiyani yuklash
+                        </button>
                       </div>
                     )}
                   </div>
@@ -232,6 +292,67 @@ export default function MyArticles() {
       </main>
 
       <Footer />
+
+      {/* Revision upload modal */}
+      {revisionArticle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-800">Yangi versiyani yuklash</h2>
+              <button onClick={() => setRevisionArticle(null)} className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+            <p className="mb-4 line-clamp-2 text-sm text-gray-500">{revisionArticle.title}</p>
+
+            <label className="mb-2 block text-sm font-medium text-gray-700">PDF fayl *</label>
+            <div
+              onClick={() => revisionInputRef.current?.click()}
+              className="mb-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 p-6 transition hover:border-blue-400 hover:bg-blue-50"
+            >
+              <Upload className="mb-2 h-8 w-8 text-gray-300" />
+              {revisionFile ? (
+                <p className="text-sm font-medium text-blue-700">{revisionFile.name}</p>
+              ) : (
+                <p className="text-sm text-gray-400">PDF faylni tanlash uchun bosing</p>
+              )}
+            </div>
+            <input
+              ref={revisionInputRef}
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={(e) => setRevisionFile(e.target.files[0] || null)}
+            />
+
+            {revisionMsg.text && (
+              <div className={`mb-4 rounded-lg px-4 py-2 text-sm ${
+                revisionMsg.type === "success"
+                  ? "bg-green-50 text-green-700"
+                  : "bg-red-50 text-red-700"
+              }`}>
+                {revisionMsg.text}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setRevisionArticle(null)}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                Bekor qilish
+              </button>
+              <button
+                onClick={handleRevisionSubmit}
+                disabled={revisionLoading}
+                className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              >
+                {revisionLoading ? "Yuklanmoqda..." : <><Upload size={14} /> Yuborish</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Modal } from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
+import { ToastContainer, useToast } from "../../components/ui/Toast";
 
 const REVIEW_STATUS = {
   PENDING:   { label: "Taklif kutilmoqda", color: "bg-yellow-100 text-yellow-700" },
@@ -33,6 +34,7 @@ const emptyForm = {
 };
 
 export default function ReviewerDashboard() {
+  const { toasts, removeToast, success, error: toastError } = useToast();
   const [reviews, setReviews] = useState([]);
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +77,7 @@ export default function ReviewerDashboard() {
       if (!res.error) {
         await loadReviews();
       } else {
-        alert("Xatolik: " + (res.data?.message || "Javob berilmadi"));
+        toastError("Xatolik: " + (res.data?.message || "Javob berilmadi"));
       }
     } catch (e) {
       console.error(e);
@@ -101,11 +103,11 @@ export default function ReviewerDashboard() {
         scoreClarity: parseInt(form.scoreClarity),
       });
       if (!res.error) {
-        alert("Retsenziya yuborildi!");
+        success("Retsenziya muvaffaqiyatli yuborildi!");
         setSubmitReview(null);
         await loadReviews();
       } else {
-        alert("Xatolik: " + (res.data?.message || "Yuborilmadi"));
+        toastError("Xatolik: " + (res.data?.message || "Yuborilmadi"));
       }
     } catch (e) {
       console.error(e);
@@ -143,7 +145,7 @@ export default function ReviewerDashboard() {
         {!isLoggedIn ? (
           <div className="rounded-xl bg-white p-10 text-center shadow-sm">
             <p className="mb-4 text-gray-600">Retsenzent kabinetiga kirish uchun tizimga kiring.</p>
-            <a href="/admin/login"
+            <a href="/login"
               className="rounded-lg bg-indigo-600 px-6 py-2 font-semibold text-white hover:bg-indigo-700">
               Kirish
             </a>
@@ -384,6 +386,7 @@ export default function ReviewerDashboard() {
           </form>
         </div>
       </Modal>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }
