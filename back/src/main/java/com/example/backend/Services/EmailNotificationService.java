@@ -18,7 +18,7 @@ public class EmailNotificationService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username:noreply@journal.com}")
+    @Value("${spring.mail.username:akobir@bxu.uz}")
     private String fromAddress;
 
     @Value("${app.name:Scientific Journal Platform}")

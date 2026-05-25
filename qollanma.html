@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ilmiy Jurnal Platformasi — To'liq Qo'llanma</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a202c; }
+
+  header {
+    background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%);
+    color: white; padding: 40px 30px; text-align: center;
+  }
+  header h1 { font-size: 2rem; margin-bottom: 8px; }
+  header p { font-size: 1rem; opacity: 0.85; }
+
+  nav {
+    background: #2d3748; padding: 12px 30px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  nav a {
+    color: #90cdf4; text-decoration: none; font-size: 0.85rem;
+    padding: 4px 10px; border-radius: 4px; transition: background 0.2s;
+  }
+  nav a:hover { background: #4a5568; color: white; }
+
+  main { max-width: 900px; margin: 30px auto; padding: 0 20px 60px; }
+
+  .step {
+    background: white; border-radius: 12px; margin-bottom: 28px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;
+  }
+  .step-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 24px; border-bottom: 1px solid #e2e8f0;
+  }
+  .step-num {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; font-weight: 700; flex-shrink: 0; color: white;
+  }
+  .step-header h2 { font-size: 1.2rem; color: #1a365d; }
+  .step-header p { font-size: 0.85rem; color: #718096; margin-top: 2px; }
+  .step-body { padding: 20px 24px; }
+
+  .color-1 { background: #3182ce; }
+  .color-2 { background: #38a169; }
+  .color-3 { background: #d69e2e; }
+  .color-4 { background: #805ad5; }
+  .color-5 { background: #e53e3e; }
+  .color-6 { background: #dd6b20; }
+  .color-7 { background: #319795; }
+  .color-8 { background: #d53f8c; }
+  .color-9 { background: #2c7a7b; }
+
+  .field-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.9rem; }
+  .field-table th { background: #edf2f7; padding: 10px 12px; text-align: left; font-weight: 600; color: #4a5568; }
+  .field-table td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  .field-table tr:last-child td { border-bottom: none; }
+  .field-table tr:hover td { background: #f7fafc; }
+
+  .req { color: #e53e3e; font-weight: 700; }
+  .opt { color: #718096; }
+
+  .flow {
+    display: flex; flex-wrap: wrap; gap: 0; margin: 16px 0;
+    align-items: center;
+  }
+  .flow-item {
+    padding: 10px 16px; border-radius: 8px; font-size: 0.82rem;
+    font-weight: 600; text-align: center; min-width: 110px;
+  }
+  .flow-arrow {
+    font-size: 1.4rem; color: #a0aec0; padding: 0 4px;
+  }
+
+  .s-draft     { background: #bee3f8; color: #2b6cb0; }
+  .s-submit    { background: #c6f6d5; color: #276749; }
+  .s-review    { background: #fefcbf; color: #744210; }
+  .s-revision  { background: #fed7aa; color: #7b341e; }
+  .s-accepted  { background: #d0f0c0; color: #1c4532; }
+  .s-published { background: #b2f5ea; color: #1d4044; }
+  .s-archived  { background: #e2e8f0; color: #4a5568; }
+  .s-rejected  { background: #fed7d7; color: #822727; }
+
+  .role-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 12px; }
+  .role-card {
+    border-radius: 10px; padding: 14px 16px;
+    border-left: 4px solid;
+  }
+  .role-card h4 { font-size: 0.9rem; margin-bottom: 6px; }
+  .role-card ul { font-size: 0.8rem; padding-left: 14px; color: #4a5568; line-height: 1.7; }
+
+  .r1 { background: #fff5f5; border-color: #fc8181; }
+  .r2 { background: #f0fff4; border-color: #68d391; }
+  .r3 { background: #ebf8ff; border-color: #63b3ed; }
+  .r4 { background: #faf5ff; border-color: #b794f4; }
+  .r5 { background: #fffaf0; border-color: #f6ad55; }
+  .r6 { background: #e6fffa; border-color: #4fd1c5; }
+  .r7 { background: #fff0f3; border-color: #fc8181; }
+  .r8 { background: #f7f7f7; border-color: #a0aec0; }
+
+  .email-list { list-style: none; margin-top: 12px; }
+  .email-list li {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 14px; border-radius: 8px; margin-bottom: 8px;
+    font-size: 0.88rem; border: 1px solid #e2e8f0;
+  }
+  .email-icon { font-size: 1.2rem; flex-shrink: 0; }
+  .email-list li strong { display: block; font-size: 0.82rem; color: #2b6cb0; }
+
+  .info-box {
+    background: #ebf8ff; border-left: 4px solid #3182ce;
+    padding: 14px 16px; border-radius: 0 8px 8px 0;
+    font-size: 0.88rem; margin: 12px 0; line-height: 1.6;
+  }
+  .warn-box {
+    background: #fffaf0; border-left: 4px solid #ed8936;
+    padding: 14px 16px; border-radius: 0 8px 8px 0;
+    font-size: 0.88rem; margin: 12px 0; line-height: 1.6;
+  }
+
+  .id-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-top: 14px; }
+  .id-card {
+    border-radius: 10px; padding: 16px 18px;
+  }
+  .id-card .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 700; margin-bottom: 8px;
+  }
+  .id-card h4 { font-size: 1rem; margin-bottom: 6px; }
+  .id-card p { font-size: 0.82rem; color: #4a5568; line-height: 1.6; }
+  .id-card .example { font-family: monospace; font-size: 0.8rem; background: rgba(0,0,0,0.06); padding: 3px 7px; border-radius: 4px; margin-top: 8px; display: inline-block; }
+
+  .doi-card  { background: #fff5f5; }
+  .doi-card .badge { background: #fc8181; color: white; }
+  .issn-card { background: #f0fff4; }
+  .issn-card .badge { background: #48bb78; color: white; }
+  .isbn-card { background: #ebf8ff; }
+  .isbn-card .badge { background: #4299e1; color: white; }
+
+  .login-box {
+    background: #f7fafc; border: 1px solid #e2e8f0;
+    border-radius: 10px; padding: 16px 20px; font-size: 0.88rem;
+    margin-top: 12px;
+  }
+  .login-box code {
+    background: #2d3748; color: #90cdf4;
+    padding: 2px 8px; border-radius: 4px; font-size: 0.85rem;
+  }
+
+  .transition-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.85rem; }
+  .transition-table th { background: #2d3748; color: white; padding: 10px 12px; text-align: left; }
+  .transition-table td { padding: 9px 12px; border-bottom: 1px solid #e2e8f0; }
+  .transition-table tr:hover td { background: #f7fafc; }
+  .tick { color: #38a169; font-weight: 700; }
+  .cross { color: #e53e3e; font-weight: 700; }
+
+  footer { text-align: center; color: #a0aec0; font-size: 0.8rem; padding: 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 Ilmiy Jurnal Platformasi</h1>
+  <p>To'liq qo'llanma — Jurnal ochishdan maqola chop etishgacha, qadam-baqadam (O'zbek tilida)</p>
+</header>
+
+<nav>
+  <a href="#kirish">Kirish</a>
+  <a href="#rollar">Rollar</a>
+  <a href="#jurnal">1. Jurnal</a>
+  <a href="#son">2. Son (Issue)</a>
+  <a href="#maqola">3. Maqola yuborish</a>
+  <a href="#status">4. Statuslar</a>
+  <a href="#taqriz">5. Taqriz</a>
+  <a href="#qaror">6. Qaror</a>
+  <a href="#nashr">7. Nashr</a>
+  <a href="#email">8. Email xabarnomalar</a>
+  <a href="#identifikator">9. DOI / ISSN / ISBN</a>
+</nav>
+
+<main>
+
+  <!-- ─── KIRISH ─────────────────────────────────────────── -->
+  <div class="step" id="kirish">
+    <div class="step-header">
+      <div class="step-num color-1">🔑</div>
+      <div>
+        <h2>Tizimga kirish (Login)</h2>
+        <p>Barcha amallar uchun avval tizimga kirishingiz kerak</p>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="login-box">
+        <p><strong>Standart hisoblar (avtomatik yaratiladi):</strong></p>
+        <br>
+        <p>📱 Telefon: <code>superadmin</code> &nbsp; 🔒 Parol: <code>00000000</code></p>
+        <br>
+        <p>📱 Telefon: <code>Akobir</code> &nbsp; 🔒 Parol: <code>Akobir</code></p>
+        <br>
+        <p>Bu hisoblar <strong>SUPERADMIN</strong> huquqiga ega — barcha imkoniyatlar mavjud.</p>
+      </div>
+      <div class="info-box" style="margin-top:14px;">
+        🌐 Swagger (API test qilish uchun): <strong>http://localhost:8080/swagger-ui.html</strong><br>
+        Frontend: <strong>http://localhost:3000</strong> (yoki 8080 da ham ishlaydi)
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── ROLLAR ─────────────────────────────────────────── -->
+  <div class="step" id="rollar">
+    <div class="step-header">
+      <div class="step-num color-2">👥</div>
+      <div>
+        <h2>Rollar — Kim nima qila oladi?</h2>
+        <p>Tizimda 8 xil rol mavjud</p>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="role-grid">
+        <div class="role-card r1">
+          <h4>🔴 SUPERADMIN</h4>
+          <ul>
+            <li>Hamma narsani boshqaradi</li>
+            <li>Rol beradi / oladi</li>
+            <li>Jurnal yaratadi</li>
+            <li>Foydalanuvchi boshqaradi</li>
+          </ul>
+        </div>
+        <div class="role-card r2">
+          <h4>🟢 ADMIN</h4>
+          <ul>
+            <li>Jurnallarni boshqaradi</li>
+            <li>Maqolalar statusini o'zgartiradi</li>
+            <li>Taqrizchilarni belgilaydi</li>
+          </ul>
+        </div>
+        <div class="role-card r3">
+          <h4>🔵 JOURNAL_ADMIN</h4>
+          <ul>
+            <li>Faqat o'z jurnalini boshqaradi</li>
+            <li>Sonlar (issue) yaratadi</li>
+            <li>Tahririyat hay'atini belgilaydi</li>
+          </ul>
+        </div>
+        <div class="role-card r4">
+          <h4>🟣 EDITOR</h4>
+          <ul>
+            <li>Maqolalarni ko'rib chiqadi</li>
+            <li>Taqrizchiga topshiradi</li>
+            <li>Qabul / rad etadi</li>
+          </ul>
+        </div>
+        <div class="role-card r5">
+          <h4>🟠 REVIEWER (Taqrizchi)</h4>
+          <ul>
+            <li>Maqolani baholaydi</li>
+            <li>Baho va sharh yozadi</li>
+            <li>Qaror bildiradi</li>
+          </ul>
+        </div>
+        <div class="role-card r6">
+          <h4>🩵 AUTHOR (Muallif)</h4>
+          <ul>
+            <li>Maqola yuboradi</li>
+            <li>Maqolani tahrirlaydi</li>
+            <li>Status kuzatadi</li>
+          </ul>
+        </div>
+        <div class="role-card r7">
+          <h4>🔴 USER</h4>
+          <ul>
+            <li>Umumiy foydalanuvchi</li>
+            <li>Maqolalarni o'qiydi</li>
+          </ul>
+        </div>
+        <div class="role-card r8">
+          <h4>⚪ READER</h4>
+          <ul>
+            <li>Faqat o'qish</li>
+            <li>Maqola yuklab oladi</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 1. JURNAL YARATISH ─────────────────────────────── -->
+  <div class="step" id="jurnal">
+    <div class="step-header">
+      <div class="step-num color-3">1</div>
+      <div>
+        <h2>Qadam 1 — Jurnal yaratish</h2>
+        <p>Hamma narsa bitta jurnaldan boshlanadi. Maqolalar jurnalga tegishli bo'ladi.</p>
+      </div>
+    </div>
+    <div class="step-body">
+      <p style="margin-bottom:12px; font-size:0.9rem;"><strong>Kim qila oladi:</strong> SUPERADMIN, ADMIN</p>
+      <p style="margin-bottom:8px; font-size:0.9rem;"><strong>API:</strong> <code style="background:#edf2f7;padding:2px 6px;border-radius:4px;">POST /api/journals</code></p>
+
+      <table class="field-table">
+        <thead><tr><th>Maydon</th><th>Majburiy?</th><th>Nima?</th></tr></thead>
+        <tbody>
+          <tr><td><strong>title</strong></td><td><span class="req">✅ Ha</span></td><td>Jurnal to'liq nomi (masalan: "O'zbekiston Kimyo Jurnali")</td></tr>
+          <tr><td><strong>titleAbbr</strong></td><td><span class="opt">— Yo'q</span></td><td>Qisqartirilgan nom (masalan: "O'zKimJ")</td></tr>
+          <tr><td><strong>issnPrint</strong></td><td><span class="opt">— Yo'q</span></td><td>Bosma ISSN raqami (masalan: 2181-1236)</td></tr>
+          <tr><td><strong>issnOnline</strong></td><td><span class="opt">— Yo'q</span></td><td>Elektron ISSN raqami</td></tr>
+          <tr><td><strong>isbn</strong></td><td><span class="opt">— Yo'q</span></td><td>Kitob tipidagi maxsus sonlar uchun ISBN</td></tr>
+          <tr><td><strong>description</strong></td><td><span class="opt">— Yo'q</span></td><td>Jurnal maqsadi va yo'nalishi haqida to'liq matn</td></tr>
+          <tr><td><strong>publicationFrequency</strong></td><td><span class="opt">— Yo'q</span></td><td>Qancha tez chiqadi: MONTHLY, QUARTERLY, BIANNUAL, ANNUAL</td></tr>
+          <tr><td><strong>language</strong></td><td><span class="opt">— Yo'q</span></td><td>Asosiy til (standart: "en"). O'zbek uchun "uz"</td></tr>
+          <tr><td><strong>openAccess</strong></td><td><span class="opt">— Yo'q</span></td><td>Ochiq kirish (standart: true = bepul o'qish)</td></tr>
+          <tr><td><strong>license</strong></td><td><span class="opt">— Yo'q</span></td><td>Litsenziya, masalan: "CC BY 4.0"</td></tr>
+          <tr><td><strong>email</strong></td><td><span class="opt">— Yo'q</span></td><td>Jurnal aloqa emaili</td></tr>
+          <tr><td><strong>publisher</strong></td><td><span class="opt">— Yo'q</span></td><td>Nashriyot nomi (masalan: "BuxDU")</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box" style="margin-top:14px;">
+        💡 <strong>Slug</strong> avtomatik yaratiladi — jurnalning URL manzili shundan tuziladi.<br>
+        Masalan: "O'zbekiston Kimyo Jurnali" → <code>/journals/ozbekiston-kimyo-jurnali</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 2. SON YARATISH ────────────────────────────────── -->
+  <div class="step" id="son">
+    <div class="step-header">
+      <div class="step-num color-4">2</div>
+      <div>
+        <h2>Qadam 2 — Son (Issue) yaratish</h2>
+        <p>Jurnal sonlarga bo'linadi. Har bir son — bitta to'plam maqolalar.</p>
+      </div>
+    </div>
+    <div class="step-body">
+      <p style="margin-bottom:12px; font-size:0.9rem;"><strong>Kim qila oladi:</strong> ADMIN, JOURNAL_ADMIN</p>
+      <p style="margin-bottom:8px; font-size:0.9rem;"><strong>API:</strong> <code style="background:#edf2f7;padding:2px 6px;border-radius:4px;">POST /api/issues</code></p>
+
+      <table class="field-table">
+        <thead><tr><th>Maydon</th><th>Majburiy?</th><th>Nima?</th></tr></thead>
+        <tbody>
+          <tr><td><strong>journalId</strong></td><td><span class="req">✅ Ha</span></td><td>Qaysi jurnalga tegishli (jurnal ID si)</td></tr>
+          <tr><td><strong>volumeNumber</strong></td><td><span class="opt">— Yo'q</span></td><td>Tom raqami (masalan: 5 — 5-tom)</td></tr>
+          <tr><td><strong>issueNumber</strong></td><td><span class="opt">— Yo'q</span></td><td>Son raqami (masalan: 2 — 2-son)</td></tr>
+          <tr><td><strong>title</strong></td><td><span class="opt">— Yo'q</span></td><td>Maxsus son sarlavhasi (ixtiyoriy)</td></tr>
+          <tr><td><strong>publishedDate</strong></td><td><span class="opt">— Yo'q</span></td><td>Nashr sanasi (masalan: 2025-06-01)</td></tr>
+          <tr><td><strong>isCurrent</strong></td><td><span class="opt">— Yo'q</span></td><td>Hozirgi joriy son — true/false</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box" style="margin-top:14px;">
+        💡 Bir jurnalda bir xil tom+son raqami ikki marta bo'lishi mumkin emas (unikal cheklov mavjud).<br>
+        Maqolalar avval qabul qilinadi, <strong>keyin</strong> songa biriktiriladi.
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 3. MAQOLA YUBORISH ───────────────────────────── -->
+  <div class="step" id="maqola">
+    <div class="step-header">
+      <div class="step-num color-5">3</div>
+      <div>
+        <h2>Qadam 3 — Maqola yuborish (Submit)</h2>
+        <p>Muallif maqolasini tizimga yuboradi. Status: SUBMITTED bo'ladi.</p>
+      </div>
+    </div>
+    <div class="step-body">
+      <p style="margin-bottom:12px; font-size:0.9rem;"><strong>Kim qila oladi:</strong> AUTHOR, USER, ADMIN</p>
+      <p style="margin-bottom:8px; font-size:0.9rem;"><strong>API:</strong> <code style="background:#edf2f7;padding:2px 6px;border-radius:4px;">POST /api/articles</code></p>
+
+      <table class="field-table">
+        <thead><tr><th>Maydon</th><th>Majburiy?</th><th>Nima?</th></tr></thead>
+        <tbody>
+          <tr><td><strong>title</strong></td><td><span class="req">✅ Ha</span></td><td>Maqola sarlavhasi</td></tr>
+          <tr><td><strong>journalId</strong></td><td><span class="req">✅ Ha</span></td><td>Qaysi jurnalga yuborilmoqda</td></tr>
+          <tr><td><strong>abstractText</strong></td><td><span class="opt">— Yo'q</span></td><td>Annotatsiya — maqolaning qisqacha mazmuni</td></tr>
+          <tr><td><strong>keywords</strong></td><td><span class="opt">— Yo'q</span></td><td>Kalit so'zlar ro'yxati (["kimyo", "analiz", ...])</td></tr>
+          <tr><td><strong>authors</strong></td><td><span class="opt">— Yo'q</span></td><td>Mualliflar ro'yxati. Har biri: fullName, email, affiliation, orcid, isCorresponding</td></tr>
+          <tr><td><strong>references</strong></td><td><span class="opt">— Yo'q</span></td><td>Adabiyotlar ro'yxati (text, doi, url)</td></tr>
+          <tr><td><strong>pdfFileId</strong></td><td><span class="opt">— Yo'q</span></td><td>Avval /api/attachments ga yuklangan PDF fayl ID si</td></tr>
+          <tr><td><strong>reviewType</strong></td><td><span class="opt">— Yo'q</span></td><td>Taqriz turi: BLIND, DOUBLE_BLIND, OPEN (standart: DOUBLE_BLIND)</td></tr>
+          <tr><td><strong>language</strong></td><td><span class="opt">— Yo'q</span></td><td>Maqola tili</td></tr>
+          <tr><td><strong>fundingInfo</strong></td><td><span class="opt">— Yo'q</span></td><td>Moliyalashtirish ma'lumoti</td></tr>
+        </tbody>
+      </table>
+
+      <div class="warn-box" style="margin-top:14px;">
+        ⚠️ <strong>PDF yuklash tartibi:</strong> Avval <code>POST /api/attachments/upload</code> orqali faylni yuklang, u ID qaytaradi. Keyin shu ID ni maqolaga yozing.
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 4. STATUS YO'LI ───────────────────────────────── -->
+  <div class="step" id="status">
+    <div class="step-header">
+      <div class="step-num color-6">4</div>
+      <div>
+        <h2>Qadam 4 — Maqola holatlari (Statuslar)</h2>
+        <p>Har bir maqola quyidagi yo'ldan o'tadi</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <div class="flow">
+        <div class="flow-item s-draft">📝 DRAFT<br><small>Qoralama</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item s-submit">📤 SUBMITTED<br><small>Yuborildi</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item s-review">🔍 UNDER_REVIEW<br><small>Ko'rib chiqilmoqda</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item s-revision">✏️ REVISION_REQUIRED<br><small>Tahrir kerak</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item s-accepted">✅ ACCEPTED<br><small>Qabul qilindi</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item s-published">🌍 PUBLISHED<br><small>Nashr etildi</small></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-item s-archived">📦 ARCHIVED<br><small>Arxivlandi</small></div>
+      </div>
+      <div style="margin: 8px 0 16px;">
+        <span class="flow-item s-rejected" style="display:inline-block;">❌ REJECTED — Rad etildi (istalgan bosqichda)</span>
+      </div>
+
+      <table class="transition-table">
+        <thead><tr><th>Hozirgi status</th><th>Mumkin bo'lgan keyingi status</th><th>Kim o'zgartiradi</th></tr></thead>
+        <tbody>
+          <tr><td><span class="flow-item s-draft" style="display:inline-block;padding:3px 8px;">DRAFT</span></td><td>→ SUBMITTED</td><td>Muallif</td></tr>
+          <tr><td><span class="flow-item s-submit" style="display:inline-block;padding:3px 8px;">SUBMITTED</span></td><td>→ UNDER_REVIEW &nbsp; | &nbsp; → REJECTED</td><td>Editor / Admin</td></tr>
+          <tr><td><span class="flow-item s-review" style="display:inline-block;padding:3px 8px;">UNDER_REVIEW</span></td><td>→ REVISION_REQUIRED &nbsp; | &nbsp; → ACCEPTED &nbsp; | &nbsp; → REJECTED</td><td>Editor / Admin</td></tr>
+          <tr><td><span class="flow-item s-revision" style="display:inline-block;padding:3px 8px;">REVISION_REQUIRED</span></td><td>→ SUBMITTED (qayta) &nbsp; | &nbsp; → REJECTED</td><td>Muallif qayta yuboradi</td></tr>
+          <tr><td><span class="flow-item s-accepted" style="display:inline-block;padding:3px 8px;">ACCEPTED</span></td><td>→ PUBLISHED &nbsp; | &nbsp; → REJECTED</td><td>Admin / Editor</td></tr>
+          <tr><td><span class="flow-item s-published" style="display:inline-block;padding:3px 8px;">PUBLISHED</span></td><td>→ ARCHIVED</td><td>Admin</td></tr>
+          <tr><td><span class="flow-item s-rejected" style="display:inline-block;padding:3px 8px;">REJECTED</span></td><td colspan="2" style="color:#a0aec0;">Keyingi holat yo'q (yakuniy)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box" style="margin-top:14px;">
+        💡 <strong>Status o'zgartirish API:</strong> <code>PATCH /api/articles/{id}/status?status=ACCEPTED</code><br>
+        Noto'g'ri o'tish bo'lsa (masalan: PUBLISHED → SUBMITTED) tizim xato qaytaradi.
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 5. TAQRIZ ─────────────────────────────────────── -->
+  <div class="step" id="taqriz">
+    <div class="step-header">
+      <div class="step-num color-7">5</div>
+      <div>
+        <h2>Qadam 5 — Taqriz jarayoni (Peer Review)</h2>
+        <p>Maqola mutaxassis tomonidan baholanadi</p>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <p style="margin-bottom:12px; font-size:0.9rem; font-weight:600;">Taqriz turlari:</p>
+      <table class="field-table">
+        <thead><tr><th>Tur</th><th>Izoh</th></tr></thead>
+        <tbody>
+          <tr><td><strong>BLIND</strong></td><td>Taqrizchi muallif nomini bilmaydi</td></tr>
+          <tr><td><strong>DOUBLE_BLIND</strong></td><td>Taqrizchi ham, muallif ham bir-birini bilmaydi (standart)</td></tr>
+          <tr><td><strong>OPEN</strong></td><td>Har ikki tomon bir-birini biladi</td></tr>
+        </tbody>
+      </table>
+
+      <p style="margin: 16px 0 8px; font-size:0.9rem; font-weight:600;">Taqrizchi belgilash:</p>
+      <p style="font-size:0.88rem; margin-bottom:8px;">API: <code style="background:#edf2f7;padding:2px 6px;border-radius:4px;">POST /api/reviews/assign</code></p>
+
+      <table class="field-table">
+        <thead><tr><th>Maydon</th><th>Nima?</th></tr></thead>
+        <tbody>
+          <tr><td><strong>articleId</strong></td><td>Qaysi maqola</td></tr>
+          <tr><td><strong>reviewerId</strong></td><td>Qaysi taqrizchi (REVIEWER rolidagi foydalanuvchi)</td></tr>
+          <tr><td><strong>dueDate</strong></td><td>Taqrizni topshirish muddati</td></tr>
+        </tbody>
+      </table>
+
+      <p style="margin: 16px 0 8px; font-size:0.9rem; font-weight:600;">Taqriz topshirish (taqrizchi tomonidan):</p>
+      <p style="font-size:0.88rem; margin-bottom:8px;">API: <code style="background:#edf2f7;padding:2px 6px;border-radius:4px;">POST /api/reviews/{id}/submit</code></p>
+
+      <table class="field-table">
+        <thead><tr><th>Maydon</th><th>Nima?</th></tr></thead>
+        <tbody>
+          <tr><td><strong>decision</strong></td><td>ACCEPT / REJECT / MINOR_REVISION / MAJOR_REVISION</td></tr>
+          <tr><td><strong>commentsForAuthor</strong></td><td>Muallif ko'radigan sharhlar</td></tr>
+          <tr><td><strong>commentsForEditor</strong></td><td>Faqat editor ko'radigan maxfiy sharhlar</td></tr>
+          <tr><td><strong>score</strong></td><td>Umumiy baho (1-10)</td></tr>
+          <tr><td><strong>scoreOriginality</strong></td><td>Yangilik darajasi (0-10)</td></tr>
+          <tr><td><strong>scoreMethodology</strong></td><td>Metodologiya sifati (0-10)</td></tr>
+          <tr><td><strong>scoreClarity</strong></td><td>Aniqlik va tushunarlilik (0-10)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ─── 6. QAROR ──────────────────────────────────────── -->
+  <div class="step" id="qaror">
+    <div class="step-header">
+      <div class="step-num color-8">6</div>
+      <div>
+        <h2>Qadam 6 — Qabul qilish / Rad etish</h2>
+        <p>Editor yoki Admin yakuniy qaror qabul qiladi</p>
+      </div>
+    </div>
+    <div class="step-body">
+      <table class="field-table">
+        <thead><tr><th>Qaror</th><th>Nima bo'ladi?</th><th>Email yuboriladi?</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="flow-item s-accepted" style="display:inline-block;padding:3px 8px;">✅ ACCEPTED</span></td>
+            <td>Maqola qabul qilindi. Songa biriktirishga tayyor.</td>
+            <td>✉️ Muallifga "Qabul qilindi" xabari</td>
+          </tr>
+          <tr>
+            <td><span class="flow-item s-revision" style="display:inline-block;padding:3px 8px;">✏️ REVISION_REQUIRED</span></td>
+            <td>Muallif tahrir qilib qayta yuborishi kerak.</td>
+            <td>✉️ Muallifga "Tahrir talab qilinadi" xabari</td>
+          </tr>
+          <tr>
+            <td><span class="flow-item s-rejected" style="display:inline-block;padding:3px 8px;">❌ REJECTED</span></td>
+            <td>Maqola rad etildi. Yakuniy, qayta yuborib bo'lmaydi.</td>
+            <td>✉️ Muallifga "Rad etildi" xabari</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="info-box" style="margin-top:14px;">
+        💡 Maqola <strong>ACCEPTED</strong> bo'lgandan keyin uni <strong>songa biriktirish</strong> kerak:<br>
+        <code>PATCH /api/articles/{articleId}/assign-issue/{issueId}</code><br><br>
+        Bu qilmasdan nashr bo'lmaydi.
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 7. NASHR ──────────────────────────────────────── -->
+  <div class="step" id="nashr">
+    <div class="step-header">
+      <div class="step-num color-9">7</div>
+      <div>
+        <h2>Qadam 7 — Nashr etish (PUBLISHED)</h2>
+        <p>Maqola ommaga chiqariladi. DOI avtomatik yaratiladi.</p>
+      </div>
+    </div>
+    <div class="step-body">
+      <p style="font-size:0.9rem; margin-bottom:12px;"><strong>API:</strong> <code style="background:#edf2f7;padding:2px 6px;border-radius:4px;">PATCH /api/articles/{id}/status?status=PUBLISHED</code></p>
+
+      <p style="font-size:0.9rem; margin-bottom:12px;">Nashr qilinganida avtomatik bo'ladigan ishlar:</p>
+      <table class="field-table">
+        <thead><tr><th>#</th><th>Nima bo'ladi?</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><strong>publishedAt</strong> — nashr sanasi avtomatik yoziladi</td></tr>
+          <tr><td>2</td><td><strong>DOI</strong> — hali yo'q bo'lsa, avtomatik yaratiladi (masalan: <code>10.12345/article-sarlavha-yili</code>)</td></tr>
+          <tr><td>3</td><td>Agar <code>doi.crossref.enabled=true</code> bo'lsa CrossRef ga ham ro'yxatdan o'tadi</td></tr>
+          <tr><td>4</td><td>Muallifga "Maqolangiz nashr etildi" email yuboriladi</td></tr>
+          <tr><td>5</td><td>Maqola ommabop API orqali ko'rinadi (<code>GET /api/articles/published</code>)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="warn-box" style="margin-top:14px;">
+        ⚠️ <strong>Diqqat:</strong> Maqola songa biriktirilmagan bo'lsa ham nashr qilish texnik jihatdan ishlaydi, lekin to'g'ri tartib — avval songa biriktiring, keyin nashr qiling.
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 8. EMAIL ───────────────────────────────────────── -->
+  <div class="step" id="email">
+    <div class="step-header">
+      <div class="step-num color-1">8</div>
+      <div>
+        <h2>Qadam 8 — Email xabarnomalar</h2>
+        <p>Tizim avtomatik ravishda email yuboradi</p>
+      </div>
+    </div>
+    <div class="step-body">
+      <ul class="email-list">
+        <li>
+          <div class="email-icon">📤</div>
+          <div>
+            <strong>Maqola yuborilganda (SUBMITTED)</strong>
+            Muallifga: "Maqolangiz muvaffaqiyatli yuborildi"<br>
+            Adminга ham xabar ketadi
+          </div>
+        </li>
+        <li>
+          <div class="email-icon">✅</div>
+          <div>
+            <strong>Maqola qabul qilinganda (ACCEPTED)</strong>
+            Muallifga: "Tabriklaymiz! Maqolangiz qabul qilindi"
+          </div>
+        </li>
+        <li>
+          <div class="email-icon">✏️</div>
+          <div>
+            <strong>Tahrir talab qilinganda (REVISION_REQUIRED)</strong>
+            Muallifga: "Maqolangizga tahrir kiritishingiz so'ralmoqda"
+          </div>
+        </li>
+        <li>
+          <div class="email-icon">❌</div>
+          <div>
+            <strong>Rad etilganda (REJECTED)</strong>
+            Muallifga: "Maqolangiz qabul qilinmadi"
+          </div>
+        </li>
+        <li>
+          <div class="email-icon">🌍</div>
+          <div>
+            <strong>Nashr etilganda (PUBLISHED)</strong>
+            Muallifga: "Maqolangiz nashr etildi" + DOI havolasi
+          </div>
+        </li>
+        <li>
+          <div class="email-icon">🔍</div>
+          <div>
+            <strong>Taqrizchiga topshirilganda</strong>
+            Taqrizchiga: "Maqolani taqriz qilishga taklif etildi"
+          </div>
+        </li>
+        <li>
+          <div class="email-icon">🔔</div>
+          <div>
+            <strong>Taqrizchi javob berganda</strong>
+            Editorga: "Taqrizchi [qabul/rad] deb javob berdi"
+          </div>
+        </li>
+        <li>
+          <div class="email-icon">🏁</div>
+          <div>
+            <strong>Barcha taqrizlar tugaganda</strong>
+            Editorga: "Ushbu maqolaning barcha taqrizlari yakunlandi"
+          </div>
+        </li>
+      </ul>
+
+      <div class="info-box" style="margin-top:14px;">
+        📧 Emaillar <strong>akobir@bxu.uz</strong> dan ketadi (<code>mail.bxu.uz:465</code> SSL orqali).<br>
+        Barcha xabarnomalar asinxron (fon rejimida) ishlaydi — foydalanuvchi kutib o'tirmasligi kerak.
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 9. DOI / ISSN / ISBN ──────────────────────────── -->
+  <div class="step" id="identifikator">
+    <div class="step-header">
+      <div class="step-num color-2">9</div>
+      <div>
+        <h2>DOI, ISSN, ISBN — Nima va nima uchun?</h2>
+        <p>Akademik identifikatorlar — ilmiy maqolaning "pasporti"</p>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="id-grid">
+        <div class="id-card doi-card">
+          <div class="badge">DOI</div>
+          <h4>Digital Object Identifier</h4>
+          <p>
+            Har bir maqola yoki jurnalga berilgan <strong>doimiy raqamli manzil</strong>.
+            Internet orqali istalgan joydan topish mumkin.
+            Maqola URL o'zgarse ham DOI ishlaydi.
+          </p>
+          <p style="margin-top:8px;">
+            <strong>Qachon kerak:</strong> Maqola nashr etilganda, CrossRef da ro'yxatdan o'tganda.
+          </p>
+          <span class="example">Misol: 10.12345/kimyo-2025-001</span>
+          <p style="margin-top:8px; font-size:0.8rem; color:#718096;">
+            Bu tizimda: nashr qilinganda avtomatik yaratiladi. CrossRef integratsiyasi ixtiyoriy.
+          </p>
+        </div>
+
+        <div class="id-card issn-card">
+          <div class="badge">ISSN</div>
+          <h4>International Standard Serial Number</h4>
+          <p>
+            <strong>Jurnal</strong>ga berilgan 8 raqamli xalqaro raqam.
+            Har bir jurnal uchun alohida olinadi.
+          </p>
+          <p style="margin-top:8px;">
+            <strong>2 xil ISSN mavjud:</strong><br>
+            • <strong>ISSN Print</strong> — bosma nashr uchun<br>
+            • <strong>ISSN Online</strong> — elektron nashr uchun
+          </p>
+          <span class="example">Misol: 2181-1236</span>
+          <p style="margin-top:8px; font-size:0.8rem; color:#718096;">
+            Qayerdan olinadi: <strong>issn.org</strong> orqali yoki milliy kutubxona orqali.
+          </p>
+        </div>
+
+        <div class="id-card isbn-card">
+          <div class="badge">ISBN</div>
+          <h4>International Standard Book Number</h4>
+          <p>
+            <strong>Kitob</strong>lar uchun identifikator. Jurnallar uchun odatda kerak emas,
+            lekin <strong>maxsus son / konferentsiya to'plami</strong> kitob shaklida chiqsa ishlatiladi.
+          </p>
+          <p style="margin-top:8px;">
+            <strong>Qachon kerak:</strong> Jurnal maxsus "kitob" sifatida nashr qilinganda.
+          </p>
+          <span class="example">Misol: 978-9943-12-345-6</span>
+          <p style="margin-top:8px; font-size:0.8rem; color:#718096;">
+            Qayerdan olinadi: <strong>isbn-international.org</strong> yoki milliy kutubxona orqali.
+          </p>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-top:16px;">
+        <strong>Xulosa:</strong><br>
+        • <strong>DOI</strong> → har bir alohida <u>maqola</u> uchun (avtomatik, PUBLISHED da yaratiladi)<br>
+        • <strong>ISSN</strong> → <u>jurnal</u> uchun (bir marta olinadi, application.properties ga yoziladi)<br>
+        • <strong>ISBN</strong> → <u>kitob/maxsus son</u> uchun (ixtiyoriy, kam hollarda kerak)
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── UMUMIY JARAYON ─────────────────────────────────── -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num color-6">📋</div>
+      <div>
+        <h2>Umumiy tartib — Boshidan oxirigacha</h2>
+        <p>Qisqa cheat-sheet</p>
+      </div>
+    </div>
+    <div class="step-body">
+      <table class="field-table">
+        <thead><tr><th>#</th><th>Amal</th><th>Kim</th><th>API</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Tizimga kirish</td><td>Har kim</td><td>POST /api/auth/login</td></tr>
+          <tr><td>2</td><td>Jurnal yaratish</td><td>Admin</td><td>POST /api/journals</td></tr>
+          <tr><td>3</td><td>Son yaratish</td><td>Admin</td><td>POST /api/issues</td></tr>
+          <tr><td>4</td><td>PDF yuklash</td><td>Muallif</td><td>POST /api/attachments/upload</td></tr>
+          <tr><td>5</td><td>Maqola yuborish</td><td>Muallif</td><td>POST /api/articles</td></tr>
+          <tr><td>6</td><td>Taqrizchiga topshirish</td><td>Editor</td><td>POST /api/reviews/assign</td></tr>
+          <tr><td>7</td><td>Taqriz topshirish</td><td>Reviewer</td><td>POST /api/reviews/{id}/submit</td></tr>
+          <tr><td>8</td><td>ACCEPTED qilish</td><td>Editor/Admin</td><td>PATCH /api/articles/{id}/status?status=ACCEPTED</td></tr>
+          <tr><td>9</td><td>Songa biriktirish</td><td>Editor/Admin</td><td>PATCH /api/articles/{id}/assign-issue/{issueId}</td></tr>
+          <tr><td>10</td><td>PUBLISHED qilish</td><td>Admin</td><td>PATCH /api/articles/{id}/status?status=PUBLISHED</td></tr>
+          <tr><td>11</td><td>Arxivlash</td><td>Admin</td><td>PATCH /api/articles/{id}/status?status=ARCHIVED</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  &copy; 2025 Ilmiy Jurnal Platformasi &mdash; Barcha huquqlar himoyalangan &mdash; Backend: Spring Boot 3 &bull; DB: PostgreSQL &bull; Port: 8080
+</footer>
+
+</body>
+</html>
