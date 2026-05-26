@@ -174,7 +174,8 @@ public class ArticleService {
     @Transactional
     public ArticleResponse uploadPdf(UUID articleId, MultipartFile pdfFile, User currentUser) throws Exception {
         Article article = getEntity(articleId);
-        Attachment attachment = storageService.uploadArticlePdf(pdfFile);
+        Attachment attachment = Attachment.createAttachment(pdfFile, "/articles");
+        attachment = attachmentRepo.save(attachment);
         article.setPdfFile(attachment);
         return toResponse(articleRepo.save(article));
     }
