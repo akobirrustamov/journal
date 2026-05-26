@@ -27,6 +27,8 @@ const Articles = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState(null);
+  const [detailError, setDetailError] = useState(null);
   const [issuesForAssign, setIssuesForAssign] = useState([]);
   const [selectedIssueId, setSelectedIssueId] = useState("");
   const [filters, setFilters] = useState({
@@ -70,7 +72,7 @@ const Articles = () => {
 
   const openCreateModal = () => {
     setIsEditing(false);
-
+    setFormError(null);
     setPdfFile(null);
 
     setFormData({
@@ -100,6 +102,7 @@ const Articles = () => {
 
   const openEditModal = (article) => {
     setIsEditing(true);
+    setFormError(null);
 
     setFormData({
       id: article.id,
@@ -187,6 +190,7 @@ const Articles = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError(null);
 
     try {
       setLoading(true);
@@ -219,7 +223,7 @@ const Articles = () => {
       }
 
       if (result.error) {
-        toastError("Xatolik: " + (result.data?.message || "Maqola saqlanmadi"));
+        setFormError(result.data?.message || "Maqola saqlanmadi");
         return;
       }
 
@@ -245,7 +249,7 @@ const Articles = () => {
       success(isEditing ? "Maqola yangilandi!" : "Yangi maqola yaratildi!");
     } catch (error) {
       console.error(error);
-      toastError("Xatolik yuz berdi");
+      setFormError("Kutilmagan xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
@@ -333,6 +337,7 @@ const Articles = () => {
   };
 
   const updateArticleStatus = async (articleId, newStatus) => {
+    setDetailError(null);
     try {
       const result = await ApiCall(
         `/api/v1/articles/${articleId}/status?status=${newStatus}`,
@@ -343,17 +348,18 @@ const Articles = () => {
         setSelectedArticle((prev) => prev ? { ...prev, status: newStatus } : prev);
         success("Maqola holati yangilandi!");
       } else {
-        toastError("Xatolik: " + (result.data?.message || "Holatni yangilashda xatolik"));
+        setDetailError(result.data?.message || "Holatni yangilashda xatolik");
       }
     } catch (error) {
       console.error("Holatni yangilashda xatolik", error);
-      toastError("Maqola holatini yangilashda xatolik yuz berdi");
+      setDetailError("Maqola holatini yangilashda xatolik yuz berdi");
     }
   };
 
   const viewArticleDetails = async (article) => {
     setSelectedArticle(article);
     setSelectedIssueId(article.issueId || "");
+    setDetailError(null);
     setShowModal(true);
     if (article.journalId || article.journal?.id) {
       const jId = article.journalId || article.journal?.id;
@@ -370,23 +376,26 @@ const Articles = () => {
     setSelectedArticle(null);
     setIssuesForAssign([]);
     setSelectedIssueId("");
+    setDetailError(null);
   };
 
   const resetArticle = async () => {
     if (!selectedArticle) return;
     if (!window.confirm("Maqolani SUBMITTED holatiga qaytarmoqchimisiz?")) return;
+    setDetailError(null);
     const res = await ApiCall(`/api/v1/articles/${selectedArticle.id}/reset`, "PUT");
     if (!res.error) {
       await getArticles();
       setSelectedArticle((prev) => ({ ...prev, status: "SUBMITTED" }));
       success("Maqola holati SUBMITTED ga qaytarildi!");
     } else {
-      toastError("Xatolik: " + (res.data?.message || "Qayta o'rnatib bo'lmadi"));
+      setDetailError(res.data?.message || "Qayta o'rnatib bo'lmadi");
     }
   };
 
   const assignToIssue = async () => {
     if (!selectedIssueId || !selectedArticle) return;
+    setDetailError(null);
     const res = await ApiCall(
       `/api/v1/articles/${selectedArticle.id}/assign-issue?issueId=${selectedIssueId}`,
       "PUT"
@@ -396,7 +405,7 @@ const Articles = () => {
       await getArticles();
       closeModal();
     } else {
-      toastError("Xatolik: " + (res.data?.message || "Biriktirish amalga oshmadi"));
+      setDetailError(res.data?.message || "Biriktirish amalga oshmadi");
     }
   };
 
@@ -725,9 +734,18 @@ const Articles = () => {
         }}
       >
         <form onSubmit={handleSubmit} className="p-6">
-          <h2 className="mb-6 text-2xl font-bold">
+          <h2 className="mb-4 text-2xl font-bold">
             {isEditing ? "Maqolani tahrirlash" : "Yangi maqola"}
           </h2>
+
+          {formError && (
+            <div className="mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <span className="mt-0.5 shrink-0 text-red-500">✕</span>
+              <span>{formError}</span>
+              <button type="button" onClick={() => setFormError(null)} className="ml-auto shrink-0 text-red-400 hover:text-red-600">✕</button>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* TITLE */}
             <div className="md:col-span-2">
@@ -1065,6 +1083,14 @@ const Articles = () => {
                 <X size={24} />
               </button>
             </div>
+
+            {detailError && (
+              <div className="mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <span className="mt-0.5 shrink-0 text-red-500">✕</span>
+                <span>{detailError}</span>
+                <button type="button" onClick={() => setDetailError(null)} className="ml-auto shrink-0 text-red-400 hover:text-red-600">✕</button>
+              </div>
+            )}
 
             <div className="space-y-6">
               {/* Abstract */}

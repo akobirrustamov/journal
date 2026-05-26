@@ -179,6 +179,17 @@ public class JournalService {
     }
 
     @Transactional
+    public void uploadTemplateImage(UUID id, MultipartFile file) throws Exception {
+        Journal journal = getEntity(id);
+
+        Attachment template = Attachment.createAttachment(file, "/journals/templates");
+        template = attachmentRepo.save(template);
+
+        journal.setTemplateImage(template);
+        journalRepo.save(journal);
+    }
+
+    @Transactional
     public void deactivate(UUID id) {
         Journal journal = getEntity(id);
         journal.setActive(false);
@@ -232,6 +243,7 @@ public class JournalService {
                 .description(j.getDescription())
                 .shortDescription(j.getShortDescription())
                 .coverImageUrl(j.getCoverImage() != null ? storageService.resolveUrl(j.getCoverImage()) : null)
+                .templateImageUrl(j.getTemplateImage() != null ? storageService.resolveUrl(j.getTemplateImage()) : null)
                 .publicationFrequency(j.getPublicationFrequency())
                 .foundedYear(j.getFoundedYear())
                 .publisher(j.getPublisher())

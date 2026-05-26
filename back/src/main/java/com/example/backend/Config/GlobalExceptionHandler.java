@@ -1,5 +1,6 @@
 package com.example.backend.Config;
 
+import com.example.backend.exceptions.InvalidCredentialsException;
 import com.example.backend.exceptions.InvalidStudentDataException;
 import com.example.backend.exceptions.ResourceNotFoundException;
 import com.example.backend.exceptions.StudentNotFoundException;
@@ -8,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -59,8 +62,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<?> handleDataIntegrity(DataIntegrityViolationException ex) {
         log.warn("Data integrity violation: {}", ex.getMessage());
+        String msg = ex.getRootCause() != null ? ex.getRootCause().getMessage() : ex.getMessage();
+        String userMsg = msg != null && msg.contains("unique") || msg != null && msg.contains("duplicate")
+                ? "Bu ma'lumot allaqachon mavjud (unique constraint)"
+                : "Ma'lumot bazasi cheklovi buzildi";
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(buildErrorResponse("CONFLICT", "Bu ma'lumot allaqachon mavjud (unique constraint)"));
+                .body(buildErrorResponse("CONFLICT", userMsg));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -74,6 +81,27 @@ public class GlobalExceptionHandler {
         log.warn("Validation error: {}", errors);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(buildErrorResponse("VALIDATION_ERROR", "Invalid input data", errors));
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<?> handleInvalidCredentials(InvalidCredentialsException ex) {
+        log.warn("Invalid credentials: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(buildErrorResponse("UNAUTHORIZED", ex.getMessage()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDenied(AccessDeniedException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(buildErrorResponse("FORBIDDEN", "Access denied"));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<?> handleAuthentication(AuthenticationException ex) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(buildErrorResponse("UNAUTHORIZED", "Authentication required"));
     }
 
     @ExceptionHandler(Exception.class)

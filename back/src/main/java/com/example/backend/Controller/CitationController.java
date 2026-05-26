@@ -66,6 +66,76 @@ public class CitationController {
         return ResponseEntity.ok(citationService.toMLA(article));
     }
 
+    @GetMapping(value = "/{articleId}/chicago", produces = MediaType.TEXT_HTML_VALUE)
+    @Operation(summary = "Export Chicago Author-Date citation")
+    public ResponseEntity<String> chicago(@PathVariable UUID articleId) {
+        var article = articleService.getEntity(articleId);
+        return ResponseEntity.ok(citationService.toChicago(article));
+    }
+
+    @GetMapping(value = "/{articleId}/harvard", produces = MediaType.TEXT_HTML_VALUE)
+    @Operation(summary = "Export Harvard citation")
+    public ResponseEntity<String> harvard(@PathVariable UUID articleId) {
+        var article = articleService.getEntity(articleId);
+        return ResponseEntity.ok(citationService.toHarvard(article));
+    }
+
+    @GetMapping(value = "/{articleId}/vancouver", produces = MediaType.TEXT_HTML_VALUE)
+    @Operation(summary = "Export Vancouver citation")
+    public ResponseEntity<String> vancouver(@PathVariable UUID articleId) {
+        var article = articleService.getEntity(articleId);
+        return ResponseEntity.ok(citationService.toVancouver(article));
+    }
+
+    @GetMapping(value = "/{articleId}/ieee", produces = MediaType.TEXT_HTML_VALUE)
+    @Operation(summary = "Export IEEE citation")
+    public ResponseEntity<String> ieee(@PathVariable UUID articleId) {
+        var article = articleService.getEntity(articleId);
+        return ResponseEntity.ok(citationService.toIEEE(article));
+    }
+
+    @GetMapping(value = "/{articleId}/acm", produces = MediaType.TEXT_HTML_VALUE)
+    @Operation(summary = "Export ACM citation")
+    public ResponseEntity<String> acm(@PathVariable UUID articleId) {
+        var article = articleService.getEntity(articleId);
+        return ResponseEntity.ok(citationService.toACM(article));
+    }
+
+    @GetMapping(value = "/{articleId}/acs", produces = MediaType.TEXT_HTML_VALUE)
+    @Operation(summary = "Export ACS (American Chemical Society) citation")
+    public ResponseEntity<String> acs(@PathVariable UUID articleId) {
+        var article = articleService.getEntity(articleId);
+        return ResponseEntity.ok(citationService.toACS(article));
+    }
+
+    @GetMapping(value = "/{articleId}/abnt", produces = MediaType.TEXT_HTML_VALUE)
+    @Operation(summary = "Export ABNT (Brazilian) citation")
+    public ResponseEntity<String> abnt(@PathVariable UUID articleId) {
+        var article = articleService.getEntity(articleId);
+        return ResponseEntity.ok(citationService.toABNT(article));
+    }
+
+    @GetMapping(value = "/{articleId}/ama", produces = MediaType.TEXT_HTML_VALUE)
+    @Operation(summary = "Export AMA (American Medical Association) citation")
+    public ResponseEntity<String> ama(@PathVariable UUID articleId) {
+        var article = articleService.getEntity(articleId);
+        return ResponseEntity.ok(citationService.toAMA(article));
+    }
+
+    @GetMapping(value = "/{articleId}/turabian", produces = MediaType.TEXT_HTML_VALUE)
+    @Operation(summary = "Export Turabian citation")
+    public ResponseEntity<String> turabian(@PathVariable UUID articleId) {
+        var article = articleService.getEntity(articleId);
+        return ResponseEntity.ok(citationService.toTurabian(article));
+    }
+
+    @GetMapping(value = "/{articleId}/nlm", produces = MediaType.TEXT_HTML_VALUE)
+    @Operation(summary = "Export NLM (National Library of Medicine) citation")
+    public ResponseEntity<String> nlm(@PathVariable UUID articleId) {
+        var article = articleService.getEntity(articleId);
+        return ResponseEntity.ok(citationService.toNLM(article));
+    }
+
     @GetMapping(value = "/{articleId}/dublin-core", produces = MediaType.APPLICATION_XML_VALUE)
     @Operation(summary = "Export Dublin Core XML metadata")
     public ResponseEntity<String> dublinCore(@PathVariable UUID articleId) {

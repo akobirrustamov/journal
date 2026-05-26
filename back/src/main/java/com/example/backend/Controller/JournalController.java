@@ -115,6 +115,16 @@ public class JournalController {
         return ResponseEntity.ok(ApiResponse.ok("Cover image uploaded.", null));
     }
 
+    @PostMapping(value = "/{id}/template", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN','JOURNAL_ADMIN')")
+    @Operation(summary = "Upload journal back-page template image (JPG)")
+    public ResponseEntity<ApiResponse<Void>> uploadTemplate(
+            @PathVariable UUID id,
+            @RequestPart MultipartFile file) throws Exception {
+        journalService.uploadTemplateImage(id, file);
+        return ResponseEntity.ok(ApiResponse.ok("Template image uploaded.", null));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN')")
     @Operation(summary = "Deactivate a journal")

@@ -23,6 +23,7 @@ public class JournalResponse {
     private String description;
     private String shortDescription;
     private String coverImageUrl;
+    private String templateImageUrl;
     private PublicationFrequency publicationFrequency;
     private Integer foundedYear;
     private String publisher;

@@ -29,6 +29,7 @@ public class ArticleService {
     private final ArticleRepo articleRepo;
     private final ArticleAuthorRepo authorRepo;
     private final ReferenceRepo referenceRepo;
+    private final com.example.backend.Repository.AttachmentRepo attachmentRepo;
     private final JournalService journalService;
     private final IssueService issueService;
     private final MinioStorageService storageService;

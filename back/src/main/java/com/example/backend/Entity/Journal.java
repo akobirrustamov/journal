@@ -67,6 +67,11 @@ public class Journal {
     @JoinColumn(name = "cover_image_id")
     private Attachment coverImage;
 
+    /** Back-page template image (JPG) used for issue/article back covers */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_image_id")
+    private Attachment templateImage;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "publication_frequency")
     private PublicationFrequency publicationFrequency;

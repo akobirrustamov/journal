@@ -142,6 +142,263 @@ public class CitationService {
         return sb.toString();
     }
 
+    // ── Chicago (Author-Date) ─────────────────────────────────────────
+
+    public String toChicago(Article article) {
+        String authors = formatAuthorsChicago(article);
+        String year = article.getPublishedAt() != null
+                ? String.valueOf(article.getPublishedAt().getYear()) : "n.d.";
+        StringBuilder sb = new StringBuilder();
+        sb.append(authors).append(". ").append(year).append(". ");
+        sb.append("\"").append(article.getTitle()).append(".\" ");
+        if (article.getJournal() != null)
+            sb.append("<i>").append(article.getJournal().getTitle()).append("</i>");
+        if (article.getIssue() != null && article.getIssue().getVolumeNumber() != null)
+            sb.append(" ").append(article.getIssue().getVolumeNumber());
+        if (article.getIssue() != null && article.getIssue().getIssueNumber() != null)
+            sb.append(" (").append(article.getIssue().getIssueNumber()).append(")");
+        if (article.getPageStart() != null && article.getPageEnd() != null)
+            sb.append(": ").append(article.getPageStart()).append("–").append(article.getPageEnd());
+        sb.append(".");
+        if (article.getDoi() != null)
+            sb.append(" https://doi.org/").append(article.getDoi()).append(".");
+        return sb.toString();
+    }
+
+    // ── Harvard ───────────────────────────────────────────────────────
+
+    public String toHarvard(Article article) {
+        String authors = article.getAuthors() == null ? "" :
+                article.getAuthors().stream()
+                        .map(a -> toApaAuthor(a.getFullName()))
+                        .collect(Collectors.joining(", "));
+        String year = article.getPublishedAt() != null
+                ? String.valueOf(article.getPublishedAt().getYear()) : "n.d.";
+        StringBuilder sb = new StringBuilder();
+        sb.append(authors).append(" (").append(year).append("). ");
+        sb.append("'").append(article.getTitle()).append("', ");
+        if (article.getJournal() != null)
+            sb.append("<i>").append(article.getJournal().getTitle()).append("</i>");
+        if (article.getIssue() != null && article.getIssue().getVolumeNumber() != null)
+            sb.append(", ").append(article.getIssue().getVolumeNumber());
+        if (article.getIssue() != null && article.getIssue().getIssueNumber() != null)
+            sb.append("(").append(article.getIssue().getIssueNumber()).append(")");
+        if (article.getPageStart() != null && article.getPageEnd() != null)
+            sb.append(", pp. ").append(article.getPageStart()).append("–").append(article.getPageEnd());
+        sb.append(".");
+        if (article.getDoi() != null)
+            sb.append(" doi: ").append(article.getDoi()).append(".");
+        return sb.toString();
+    }
+
+    // ── Vancouver ─────────────────────────────────────────────────────
+
+    public String toVancouver(Article article) {
+        String authors = article.getAuthors() == null ? "" :
+                article.getAuthors().stream()
+                        .map(a -> toVancouverAuthor(a.getFullName()))
+                        .collect(Collectors.joining(", "));
+        StringBuilder sb = new StringBuilder();
+        sb.append(authors).append(". ");
+        sb.append(article.getTitle()).append(". ");
+        if (article.getJournal() != null)
+            sb.append(article.getJournal().getTitle()).append(". ");
+        if (article.getPublishedAt() != null)
+            sb.append(article.getPublishedAt().getYear());
+        if (article.getIssue() != null && article.getIssue().getVolumeNumber() != null)
+            sb.append(";").append(article.getIssue().getVolumeNumber());
+        if (article.getIssue() != null && article.getIssue().getIssueNumber() != null)
+            sb.append("(").append(article.getIssue().getIssueNumber()).append(")");
+        if (article.getPageStart() != null && article.getPageEnd() != null)
+            sb.append(":").append(article.getPageStart()).append("-").append(article.getPageEnd());
+        sb.append(".");
+        if (article.getDoi() != null)
+            sb.append(" doi:").append(article.getDoi());
+        return sb.toString();
+    }
+
+    // ── IEEE ──────────────────────────────────────────────────────────
+
+    public String toIEEE(Article article) {
+        String authors = article.getAuthors() == null ? "" :
+                article.getAuthors().stream()
+                        .map(a -> toIeeeAuthor(a.getFullName()))
+                        .collect(Collectors.joining(", "));
+        StringBuilder sb = new StringBuilder();
+        sb.append(authors).append(", ");
+        sb.append("\"").append(article.getTitle()).append(",\" ");
+        if (article.getJournal() != null)
+            sb.append("<i>").append(article.getJournal().getTitle()).append("</i>");
+        if (article.getIssue() != null && article.getIssue().getVolumeNumber() != null)
+            sb.append(", vol. ").append(article.getIssue().getVolumeNumber());
+        if (article.getIssue() != null && article.getIssue().getIssueNumber() != null)
+            sb.append(", no. ").append(article.getIssue().getIssueNumber());
+        if (article.getPageStart() != null && article.getPageEnd() != null)
+            sb.append(", pp. ").append(article.getPageStart()).append("-").append(article.getPageEnd());
+        if (article.getPublishedAt() != null)
+            sb.append(", ").append(article.getPublishedAt().getYear());
+        sb.append(".");
+        if (article.getDoi() != null)
+            sb.append(" doi: ").append(article.getDoi()).append(".");
+        return sb.toString();
+    }
+
+    // ── ACM ───────────────────────────────────────────────────────────
+
+    public String toACM(Article article) {
+        String authors = article.getAuthors() == null ? "" :
+                article.getAuthors().stream()
+                        .map(a -> toApaAuthor(a.getFullName()))
+                        .collect(Collectors.joining(", "));
+        String year = article.getPublishedAt() != null
+                ? String.valueOf(article.getPublishedAt().getYear()) : "n.d.";
+        StringBuilder sb = new StringBuilder();
+        sb.append(authors).append(". ").append(year).append(". ");
+        sb.append(article.getTitle()).append(". ");
+        if (article.getJournal() != null)
+            sb.append("<i>").append(article.getJournal().getTitle()).append("</i>");
+        if (article.getIssue() != null && article.getIssue().getVolumeNumber() != null)
+            sb.append(" ").append(article.getIssue().getVolumeNumber());
+        if (article.getIssue() != null && article.getIssue().getIssueNumber() != null)
+            sb.append(", ").append(article.getIssue().getIssueNumber());
+        sb.append(" (").append(year).append(")");
+        if (article.getPageStart() != null && article.getPageEnd() != null)
+            sb.append(", ").append(article.getPageStart()).append("–").append(article.getPageEnd());
+        sb.append(".");
+        if (article.getDoi() != null)
+            sb.append(" DOI:https://doi.org/").append(article.getDoi());
+        return sb.toString();
+    }
+
+    // ── ACS (American Chemical Society) ───────────────────────────────
+
+    public String toACS(Article article) {
+        String authors = article.getAuthors() == null ? "" :
+                article.getAuthors().stream()
+                        .map(a -> toAcsAuthor(a.getFullName()))
+                        .collect(Collectors.joining("; "));
+        StringBuilder sb = new StringBuilder();
+        sb.append(authors).append(" ");
+        sb.append(article.getTitle()).append(". ");
+        if (article.getJournal() != null)
+            sb.append("<i>").append(article.getJournal().getTitle()).append("</i> ");
+        if (article.getPublishedAt() != null)
+            sb.append("<b>").append(article.getPublishedAt().getYear()).append("</b>");
+        if (article.getIssue() != null && article.getIssue().getVolumeNumber() != null)
+            sb.append(", <i>").append(article.getIssue().getVolumeNumber()).append("</i>");
+        if (article.getIssue() != null && article.getIssue().getIssueNumber() != null)
+            sb.append(" (").append(article.getIssue().getIssueNumber()).append(")");
+        if (article.getPageStart() != null && article.getPageEnd() != null)
+            sb.append(", ").append(article.getPageStart()).append("−").append(article.getPageEnd());
+        sb.append(".");
+        if (article.getDoi() != null)
+            sb.append(" DOI: ").append(article.getDoi()).append(".");
+        return sb.toString();
+    }
+
+    // ── ABNT (Brazilian) ──────────────────────────────────────────────
+
+    public String toABNT(Article article) {
+        String authors = article.getAuthors() == null ? "" :
+                article.getAuthors().stream()
+                        .map(a -> toAbntAuthor(a.getFullName()))
+                        .collect(Collectors.joining("; "));
+        StringBuilder sb = new StringBuilder();
+        sb.append(authors).append(". ");
+        sb.append(article.getTitle()).append(". ");
+        if (article.getJournal() != null)
+            sb.append("<b>").append(article.getJournal().getTitle().toUpperCase()).append("</b>, ");
+        if (article.getIssue() != null && article.getIssue().getVolumeNumber() != null)
+            sb.append("v. ").append(article.getIssue().getVolumeNumber()).append(", ");
+        if (article.getIssue() != null && article.getIssue().getIssueNumber() != null)
+            sb.append("n. ").append(article.getIssue().getIssueNumber()).append(", ");
+        if (article.getPageStart() != null && article.getPageEnd() != null)
+            sb.append("p. ").append(article.getPageStart()).append("-").append(article.getPageEnd()).append(", ");
+        if (article.getPublishedAt() != null)
+            sb.append(article.getPublishedAt().getYear()).append(".");
+        if (article.getDoi() != null)
+            sb.append(" DOI: https://doi.org/").append(article.getDoi()).append(".");
+        return sb.toString();
+    }
+
+    // ── AMA (American Medical Association) ────────────────────────────
+
+    public String toAMA(Article article) {
+        String authors = article.getAuthors() == null ? "" :
+                article.getAuthors().stream()
+                        .map(a -> toVancouverAuthor(a.getFullName()))
+                        .collect(Collectors.joining(", "));
+        StringBuilder sb = new StringBuilder();
+        sb.append(authors).append(". ");
+        sb.append(article.getTitle()).append(". ");
+        if (article.getJournal() != null)
+            sb.append("<i>").append(article.getJournal().getTitle()).append("</i>. ");
+        if (article.getPublishedAt() != null)
+            sb.append(article.getPublishedAt().getYear());
+        if (article.getIssue() != null && article.getIssue().getVolumeNumber() != null)
+            sb.append(";").append(article.getIssue().getVolumeNumber());
+        if (article.getIssue() != null && article.getIssue().getIssueNumber() != null)
+            sb.append("(").append(article.getIssue().getIssueNumber()).append(")");
+        if (article.getPageStart() != null && article.getPageEnd() != null)
+            sb.append(":").append(article.getPageStart()).append("-").append(article.getPageEnd());
+        sb.append(".");
+        if (article.getDoi() != null)
+            sb.append(" doi:").append(article.getDoi());
+        return sb.toString();
+    }
+
+    // ── Turabian ──────────────────────────────────────────────────────
+
+    public String toTurabian(Article article) {
+        String authors = article.getAuthors() == null ? "" :
+                article.getAuthors().stream()
+                        .map(ArticleAuthor::getFullName)
+                        .collect(Collectors.joining(", "));
+        StringBuilder sb = new StringBuilder();
+        sb.append(authors).append(". ");
+        sb.append("\"").append(article.getTitle()).append(".\" ");
+        if (article.getJournal() != null)
+            sb.append("<i>").append(article.getJournal().getTitle()).append("</i>");
+        if (article.getIssue() != null && article.getIssue().getVolumeNumber() != null)
+            sb.append(" ").append(article.getIssue().getVolumeNumber());
+        if (article.getIssue() != null && article.getIssue().getIssueNumber() != null)
+            sb.append(", no. ").append(article.getIssue().getIssueNumber());
+        if (article.getPublishedAt() != null)
+            sb.append(" (").append(article.getPublishedAt().getYear()).append(")");
+        if (article.getPageStart() != null && article.getPageEnd() != null)
+            sb.append(": ").append(article.getPageStart()).append("–").append(article.getPageEnd());
+        sb.append(".");
+        if (article.getDoi() != null)
+            sb.append(" https://doi.org/").append(article.getDoi()).append(".");
+        return sb.toString();
+    }
+
+    // ── NLM (National Library of Medicine) ────────────────────────────
+
+    public String toNLM(Article article) {
+        String authors = article.getAuthors() == null ? "" :
+                article.getAuthors().stream()
+                        .map(a -> toVancouverAuthor(a.getFullName()))
+                        .collect(Collectors.joining(", "));
+        StringBuilder sb = new StringBuilder();
+        sb.append(authors).append(". ");
+        sb.append(article.getTitle()).append(". ");
+        if (article.getJournal() != null)
+            sb.append(article.getJournal().getTitle()).append(". ");
+        if (article.getPublishedAt() != null)
+            sb.append(article.getPublishedAt().getYear());
+        if (article.getIssue() != null && article.getIssue().getVolumeNumber() != null)
+            sb.append(";").append(article.getIssue().getVolumeNumber());
+        if (article.getIssue() != null && article.getIssue().getIssueNumber() != null)
+            sb.append("(").append(article.getIssue().getIssueNumber()).append(")");
+        if (article.getPageStart() != null && article.getPageEnd() != null)
+            sb.append(":").append(article.getPageStart()).append("-").append(article.getPageEnd());
+        sb.append(".");
+        if (article.getDoi() != null)
+            sb.append(" Available from: https://doi.org/").append(article.getDoi());
+        return sb.toString();
+    }
+
     // ── Dublin Core XML ───────────────────────────────────────────────
 
     public String toDublinCoreXml(Article article) {
@@ -204,6 +461,61 @@ public class CitationService {
         for (int i = 0; i < parts.length - 1; i++)
             initials.append(parts[i].charAt(0)).append(". ");
         return last + ", " + initials.toString().trim();
+    }
+
+    /** Last FM format (no commas, no periods) for Vancouver/AMA/NLM */
+    private String toVancouverAuthor(String fullName) {
+        String[] parts = fullName.trim().split("\\s+");
+        if (parts.length == 1) return parts[0];
+        String last = parts[parts.length - 1];
+        StringBuilder initials = new StringBuilder();
+        for (int i = 0; i < parts.length - 1; i++)
+            initials.append(parts[i].charAt(0));
+        return last + " " + initials.toString();
+    }
+
+    /** F. M. Last format for IEEE */
+    private String toIeeeAuthor(String fullName) {
+        String[] parts = fullName.trim().split("\\s+");
+        if (parts.length == 1) return parts[0];
+        String last = parts[parts.length - 1];
+        StringBuilder initials = new StringBuilder();
+        for (int i = 0; i < parts.length - 1; i++)
+            initials.append(parts[i].charAt(0)).append(". ");
+        return initials.toString().trim() + " " + last;
+    }
+
+    /** Last, F. M. format for ACS */
+    private String toAcsAuthor(String fullName) {
+        String[] parts = fullName.trim().split("\\s+");
+        if (parts.length == 1) return parts[0];
+        String last = parts[parts.length - 1];
+        StringBuilder initials = new StringBuilder();
+        for (int i = 0; i < parts.length - 1; i++)
+            initials.append(parts[i].charAt(0)).append(". ");
+        return last + ", " + initials.toString().trim();
+    }
+
+    /** LAST, First Middle format for ABNT (Brazilian) */
+    private String toAbntAuthor(String fullName) {
+        String[] parts = fullName.trim().split("\\s+");
+        if (parts.length == 1) return parts[0].toUpperCase();
+        String last = parts[parts.length - 1].toUpperCase();
+        StringBuilder rest = new StringBuilder();
+        for (int i = 0; i < parts.length - 1; i++)
+            rest.append(parts[i]).append(" ");
+        return last + ", " + rest.toString().trim();
+    }
+
+    /** Authors joined with ', ' / 'and' for Chicago author-date */
+    private String formatAuthorsChicago(Article article) {
+        if (article.getAuthors() == null || article.getAuthors().isEmpty()) return "Anonymous";
+        var names = article.getAuthors().stream()
+                .map(a -> toApaAuthor(a.getFullName()))
+                .collect(Collectors.toList());
+        if (names.size() == 1) return names.get(0);
+        if (names.size() == 2) return names.get(0) + ", and " + names.get(1);
+        return String.join(", ", names.subList(0, names.size() - 1)) + ", and " + names.get(names.size() - 1);
     }
 
     private String escapeLatex(String s) {

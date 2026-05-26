@@ -25,8 +25,12 @@ const Journals = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState(null);
+  const [boardError, setBoardError] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
+  const [templateFile, setTemplateFile] = useState(null);
+  const [templatePreview, setTemplatePreview] = useState(null);
 
   // Board state
   const [showBoardModal, setShowBoardModal] = useState(false);
@@ -158,23 +162,28 @@ const Journals = () => {
   const uploadCoverImage = async (journalId, file) => {
     try {
       const formData = new FormData();
-
       formData.append("file", file);
-
       const token = localStorage.getItem("access_token");
-
-      await axios.post(
-        `${baseUrl}/api/v1/journals/${journalId}/cover`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.post(`${baseUrl}/api/v1/journals/${journalId}/cover`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
     } catch (error) {
       console.error(error);
       toastError("Muqova rasmi yuklanmadi");
+    }
+  };
+
+  const uploadTemplateImage = async (journalId, file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const token = localStorage.getItem("access_token");
+      await axios.post(`${baseUrl}/api/v1/journals/${journalId}/template`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      console.error(error);
+      toastError("Shablon rasmi yuklanmadi");
     }
   };
 
@@ -183,9 +192,7 @@ const Journals = () => {
     if (file) {
       setCoverFile(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setCoverPreview(reader.result);
-      };
+      reader.onloadend = () => setCoverPreview(reader.result);
       reader.readAsDataURL(file);
     }
   };
@@ -193,6 +200,21 @@ const Journals = () => {
   const removeCoverPreview = () => {
     setCoverFile(null);
     setCoverPreview(null);
+  };
+
+  const handleTemplateChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setTemplateFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setTemplatePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeTemplatePreview = () => {
+    setTemplateFile(null);
+    setTemplatePreview(null);
   };
 
   // ---------- Form Handlers ----------
@@ -206,6 +228,7 @@ const Journals = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError(null);
 
     const payload = {
       title: formData.title,
@@ -243,14 +266,18 @@ const Journals = () => {
         result = await ApiCall("/api/v1/journals", "POST", payload);
 
         if (result.error) {
-          throw new Error("Jurnal yaratilmadi");
+          setFormError(result.data?.message || "Jurnal yaratilmadi");
+          return;
         }
 
         const createdJournal = result?.data?.data;
 
-        // upload image AFTER create
+        // upload images AFTER create
         if (coverFile && createdJournal?.id) {
           await uploadCoverImage(createdJournal.id, coverFile);
+        }
+        if (templateFile && createdJournal?.id) {
+          await uploadTemplateImage(createdJournal.id, templateFile);
         }
       } else {
         // UPDATE
@@ -261,20 +288,24 @@ const Journals = () => {
         );
 
         if (result.error) {
-          throw new Error("Yangilanmadi");
+          setFormError(result.data?.message || "Jurnal yangilanmadi");
+          return;
         }
 
-        // upload image AFTER update
+        // upload images AFTER update
         if (coverFile) {
           await uploadCoverImage(formData.id, coverFile);
+        }
+        if (templateFile) {
+          await uploadTemplateImage(formData.id, templateFile);
         }
       }
 
       await getJournals();
-
       closeModal();
     } catch (error) {
       console.error(error);
+      setFormError("Kutilmagan xatolik yuz berdi");
     } finally {
       setLoading(false);
     }
@@ -308,6 +339,9 @@ const Journals = () => {
     });
     setCoverFile(null);
     setCoverPreview(journal.coverImageUrl);
+    setTemplateFile(null);
+    setTemplatePreview(journal.templateImageUrl || null);
+    setFormError(null);
     setIsEditing(true);
     setShowModal(true);
   };
@@ -339,6 +373,9 @@ const Journals = () => {
       phone: "",
       license: "CC BY 4.0",
     });
+    setTemplateFile(null);
+    setTemplatePreview(null);
+    setFormError(null);
     setIsEditing(false);
     setShowModal(true);
   };
@@ -374,6 +411,10 @@ const Journals = () => {
     setIsEditing(false);
     setCoverFile(null);
     setCoverPreview(null);
+    setTemplateFile(null);
+    setTemplatePreview(null);
+    setFormError(null);
+    setBoardError(null);
   };
 
   // ---------- Board functions ----------
@@ -381,6 +422,7 @@ const Journals = () => {
     setBoardJournal(journal);
     setBoardMembers([]);
     setBoardForm(emptyBoardForm);
+    setBoardError(null);
     setShowAddMember(false);
     setShowBoardModal(true);
     setBoardLoading(true);
@@ -397,6 +439,7 @@ const Journals = () => {
 
   const addBoardMember = async (e) => {
     e.preventDefault();
+    setBoardError(null);
     setBoardLoading(true);
     try {
       const res = await ApiCall(`/api/v1/journals/${boardJournal.id}/board`, "POST", boardForm);
@@ -408,10 +451,11 @@ const Journals = () => {
         setShowAddMember(false);
         success("A'zo muvaffaqiyatli qo'shildi!");
       } else {
-        toastError("Xatolik: " + (res.data?.message || "A'zo qo'shilmadi"));
+        setBoardError(res.data?.message || "A'zo qo'shilmadi");
       }
     } catch (e) {
       console.error(e);
+      setBoardError("Kutilmagan xatolik yuz berdi");
     } finally {
       setBoardLoading(false);
     }
@@ -630,6 +674,14 @@ const Journals = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {formError && (
+              <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <span className="mt-0.5 shrink-0 text-red-500">✕</span>
+                <span>{formError}</span>
+                <button type="button" onClick={() => setFormError(null)} className="ml-auto shrink-0 text-red-400 hover:text-red-600">✕</button>
+              </div>
+            )}
+
             {/* Basic Info */}
             <div className="rounded-lg bg-gray-50 p-4">
               <h3 className="mb-3 font-semibold text-gray-700">
@@ -798,6 +850,42 @@ const Journals = () => {
                     <button
                       type="button"
                       onClick={removeCoverPreview}
+                      className="absolute right-2 top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Template Image Upload */}
+            <div className="rounded-lg bg-gray-50 p-4">
+              <h3 className="mb-1 font-semibold text-gray-700">Orqa muqova shabloni (JPG)</h3>
+              <p className="mb-3 text-xs text-gray-500">Har bir jurnal uchun orqa sahifa shabloni rasmi</p>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Shablon yuklash
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png"
+                    onChange={handleTemplateChange}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                {templatePreview && (
+                  <div className="relative">
+                    <img
+                      src={templatePreview}
+                      alt="Template preview"
+                      className="h-48 w-full rounded-lg object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeTemplatePreview}
                       className="absolute right-2 top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
                     >
                       <X size={16} />
@@ -1068,6 +1156,14 @@ const Journals = () => {
               <X size={20} />
             </button>
           </div>
+
+          {boardError && (
+            <div className="mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <span className="mt-0.5 shrink-0 text-red-500">✕</span>
+              <span>{boardError}</span>
+              <button type="button" onClick={() => setBoardError(null)} className="ml-auto shrink-0 text-red-400 hover:text-red-600">✕</button>
+            </div>
+          )}
 
           {boardLoading ? (
             <div className="flex justify-center py-8">
